@@ -30,7 +30,7 @@ public class JavaTestInter {
         System.out.println("distinct items in the list : ");
         duplicatesList.stream().distinct().forEach(System.out::println);
 
-        // print count of items in a list from a map
+        // collect count of items in a list in a map and print
         Map<String, Long> collect1 = duplicatesList.stream()
                                     .collect(Collectors.groupingBy(Function.identity(),Collectors.counting()));
         System.out.println("Count of items in a list from a map : "+ collect1 );
@@ -56,11 +56,12 @@ public class JavaTestInter {
 
         System.out.println("sorted HashMap by value " +  sortedMap);
 
-        //  sort the above in the reverse order
+        /*  sort the above in the reverse order using the typed function an implementation
+        of the infosys question */
         Map<String, Integer> sortMapByValueDescending = sortMapByValueDescending(sortedMap);
         System.out.println("sortMapByValueDescending by value Descending " +  sortMapByValueDescending);
-        // another mode of reverse sorting a hashmap  using TreeMap
 
+        // another mode of reverse sorting a hashmap by keys  using TreeMap
         SortedMap<String, Integer> treeMapReverseSortedKeys = new TreeMap<>(Comparator.reverseOrder());
         treeMapReverseSortedKeys.put("one", 1);
         treeMapReverseSortedKeys.put("three", 3);
@@ -88,7 +89,7 @@ public class JavaTestInter {
         System.out.println("Reverse Sorted HashMap by value " +  reverseSortedMap);
 */
 
-        // Count of each characters in a string stored in a Map
+        // Count of each character in a string stored in a Map
         String hello = "hello";
         Map<Character, Long> collect = hello.chars().mapToObj(c -> (char) c)
                 .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
@@ -106,10 +107,16 @@ public class JavaTestInter {
             employees.add(new Employee("Joe", "Smith",deptId, salary));
         }
         Optional<Employee> employeeOptional = Optional.ofNullable(null);
-        // below NoSuchElementException: No value present
-//        System.out.println("employeeOptional "+ employeeOptional.get().getSalary());
         // prints employeeOptional Optional.empty if null with ofNullable
         System.out.println("employeeOptional "+ employeeOptional);
+        // below NoSuchElementException: No value present and breaks the program if not handled
+//        System.out.println("employeeOptional "+ employeeOptional.get().getSalary());
+
+        // below .NullPointerException:  and breaks the program immediately
+        Employee employee = null;
+        Optional<Employee> employeeOptionalNull = Optional.of(employee);
+
+
 
 //        List<String>  employees.stream().flatMap(emp -> emp.getPhoneList()).collect(Collectors.toList());
         /*List<String> empNames= employees.stream().map(emp -> emp.getFirstName()+ " "+ emp.getLastName()).collect(Collectors.toList());
@@ -119,9 +126,6 @@ public class JavaTestInter {
         employees.stream().map(emp -> ).collect(Collectors.toList());
 
         Employee EmployeeId, Name, ManagerId, Subordinates 1, John, 5, [] 2, Jane, 5, [] 3, Mary, 2, [] 4, Dany, null, [] 5, Boss, null, []*/
-
-
-
 
         // Max Min from a stream
         Optional<Employee> emp1= employees.stream().max(Comparator.comparing (Employee::getSalary));
@@ -134,14 +138,27 @@ public class JavaTestInter {
                 .collect(Collectors.groupingBy(Employee::getDeptId,
                         Collectors.reducing(BinaryOperator.maxBy(Comparator.comparing(Employee::getSalary)))));
 
-        Map<Integer, Optional<Employee>> topSalaryEmployees2 = employees.stream()
+        // get the top salary from Optional  from a sorted map combined in one single statement iter entryset
+        Map<Integer, Double> topSalaryEmployeeSalaryDoubleVal =  employees.stream()
                 .collect(Collectors.groupingBy(Employee::getDeptId,
-                        Collectors.reducing(BinaryOperator.maxBy(Comparator.comparing(Employee::getSalary)))));
+                      Collectors.reducing(BinaryOperator.maxBy(Comparator.comparing(Employee::getSalary)))))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().get().getSalary()));
+
+
 
         // get the top salary from Optional  from a sorted map
 
         Map<Integer, Double> topSalaryEmployeeSalary =  topSalaryEmployees.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().get().getSalary()));
+
+        // same code as above with a fix to the get method warning
+        Map<Integer, Double> topSalaryEmployeeSalaryFix = topSalaryEmployees.entrySet().stream()
+                .filter(e -> e.getValue().isPresent())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().get().getSalary()
+                ));
 
         // different ways of collecting data in the value field of the map
         Map<Integer, java.util.Optional<Employee>> mapMaxSalByDept = employees.stream()
@@ -230,8 +247,6 @@ public class JavaTestInter {
                 .flatMap(x -> Arrays.stream(x))
                 .collect(Collectors.toList());
         System.out.println("  Flatmapped  Merged Arrays into a Single List" +listOfAllChars);
-
-
 
     }
 
