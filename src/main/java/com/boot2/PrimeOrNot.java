@@ -3,6 +3,10 @@ package com.boot2;
 import java.util.Arrays;
 import java.util.List;
 
+/* A whole number greater than 1 that cannot be exactly
+ divided by any whole number other than itself and 1
+ (e.g. 2, 3, 5, 7, 11).
+ "prime numbers are very useful in cryptography"*/
 public class PrimeOrNot {
 
     public static void main(String[] args) {
@@ -19,6 +23,9 @@ public class PrimeOrNot {
     }
 
    private static boolean primeNumberOrNot(int number ){
+
+       /*Math.sqrt(5) 2.2360
+       Therefore, the value of root 5 is, √5 = 2.2360*/
 
            if (number <= 1) {
                return false;

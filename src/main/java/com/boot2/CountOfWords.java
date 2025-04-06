@@ -1,9 +1,7 @@
+package com.boot2;
+
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class CountOfWords {
 
@@ -11,7 +9,12 @@ public class CountOfWords {
 
         String inStr = "Hello World";
         String[] charArray =  inStr.split(" ");
-        List charList = Arrays.asList(charArray);
+        List<String> charList = Arrays.asList(charArray);
+        System.out.println("Count of words in charArray is :"+ charArray.length);
+        System.out.println("Count of words in charArray is :"+ Arrays.stream(charArray).count());
+
+        System.out.println("Count of words in charList is :"+ charList.size());
+        System.out.println("Count of words in charList is :"+ (long) charList.size());
 //        charList.stream().distinct().collect(Collectors.toMap(c->c, Collections.frequency(charList,c)));
 
 //        charList.stream().distinct().collect(Collectors.toMap();
