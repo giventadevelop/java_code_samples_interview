@@ -21,7 +21,12 @@ public class NumberCommaSeparator {
     }
 
     /**
-     * Explanation
+
+     * *** Explanation *****
+     * This class NumberCommaSeparator formats integers by adding commas as thousand separators.
+     * It converts a number like 1234567 to 1,234,567 for better readability.
+     * The method works by iterating through the digits from right to left and inserting a comma every
+     * three digits, except at the beginning of the number.
      * Convert the Integer to a String: Integer.toString(number) converts the number to a string.
      * Loop Through the String from Right to Left:
      * Use a StringBuilder to build the formatted string efficiently.

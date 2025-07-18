@@ -2,6 +2,15 @@ package com.boot2;
 
 import java.util.Scanner;
 
+
+/**
+ * This class CharacterOccurrenceInArray counts how many times a specific character appears across all
+ * strings in an array. It takes user input for an array of strings and a target character,
+ * then iterates through each string and each character within those strings to find the total number of
+ * occurrences. The class provides an interactive console interface where users can input their own
+ * strings and character to search for.
+ *
+ */
 public class CharacterOccurrenceInArray {
 
     public static int countOccurrences(char target, String[] array) {

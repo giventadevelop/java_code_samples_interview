@@ -14,7 +14,8 @@ public class CountOfWords {
         System.out.println("Count of words in charArray is :"+ Arrays.stream(charArray).count());
 
         System.out.println("Count of words in charList is :"+ charList.size());
-        System.out.println("Count of words in charList is :"+ (long) charList.size());
+//        System.out.println("Count of words in charList is :"+ (long) charList.size());
+        System.out.println("Count of words in charList is without (long) : "+  charList.size());
 //        charList.stream().distinct().collect(Collectors.toMap(c->c, Collections.frequency(charList,c)));
 
 //        charList.stream().distinct().collect(Collectors.toMap();

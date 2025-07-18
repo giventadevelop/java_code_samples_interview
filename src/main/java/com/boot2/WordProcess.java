@@ -3,6 +3,15 @@ package com.boot2;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * This class WordProcess takes a string of programming languages, splits it into individual words,
+ * and performs word frequency analysis using Java streams. It creates three different maps:
+ * first a HashMap with word counts, then a TreeMap sorted alphabetically by keys, and finally
+ * a LinkedHashMap sorted by frequency values (ascending order) that's converted back to a TreeMap.
+ * The class demonstrates different ways to sort and organize word frequency data, showing how the
+ * same data can be presented in various sorted formats for different analytical purposes.
+ */
 public class WordProcess {
 
     public static void main(String[] args) {
