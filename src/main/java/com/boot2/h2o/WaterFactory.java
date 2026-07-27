@@ -1,4 +1,4 @@
-package com.boot2;
+package com.boot2.h2o;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -145,7 +145,7 @@ public class WaterFactory {
      * Demo: continuous sources of H and O threads combine into water via this factory.
      * Input string characters are atoms arriving on the pipeline (e.g. "OOHHHH" → 2 water).
      *
-     * Run: {@code mvn -q exec:java -Dexec.mainClass=com.boot2.WaterFactory}
+     * Run: {@code java -cp target/classes com.boot2.h2o.WaterFactory}
      * or run this main from the IDE.
      */
     public static void main(String[] args) throws InterruptedException {

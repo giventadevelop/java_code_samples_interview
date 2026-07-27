@@ -7,8 +7,9 @@ import java.util.concurrent.Semaphore;
 /**
  * Classic H2O / Building Water — simplified interview version.
  *
- * <p>Full pipeline demo with workers lives in {@code com.boot2.WaterFactory}.
- * This package is the short Semaphore + CyclicBarrier form you can write in an interview.
+ * <p>Full pipeline demo with workers lives in {@link com.boot2.h2o.WaterFactory}
+ * ({@code com.boot2.h2o}). This package is the short Semaphore + CyclicBarrier form
+ * you can write in an interview.
  *
  * <h2>Problem</h2>
  * Threads call {@link #hydrogen} or {@link #oxygen}. Allow them to proceed only in groups of
@@ -37,7 +38,27 @@ public class H2O {
     private final CyclicBarrier barrier = new CyclicBarrier(3);
 
     /**
-     * Hydrogen atom: take an H permit → wait for full H2O → print/release H → free permit.
+     * Handles one Hydrogen atom thread that wants to become part of a water molecule.
+     *
+     * <p><b>Plain English</b>
+     * Think of this method as one H atom walking up to a small reaction room:
+     * <ol>
+     *   <li><b>Get a ticket ({@code hSem.acquire()})</b> — Only two Hydrogen tickets exist.
+     *       If two H atoms are already waiting, this thread stands in line until a ticket frees up.
+     *       That stops a crowd of H atoms from flooding the room without Oxygen.</li>
+     *   <li><b>Wait for partners ({@code barrier.await()})</b> — Inside the room the atom waits
+     *       until exactly three atoms are present: two H and one O (the O came through
+     *       {@link #oxygen}). Nobody prints or “releases” until the full set arrives.</li>
+     *   <li><b>Form water ({@code releaseHydrogen.run()})</b> — Once the trio is complete, this
+     *       H is allowed to contribute (usually by printing {@code "H"}). Together with the other
+     *       H and the O, that is one H₂O molecule.</li>
+     *   <li><b>Return the ticket ({@code hSem.release()} in {@code finally})</b> — Always give the
+     *       Hydrogen ticket back so the next H atom can enter for the next molecule, even if
+     *       something went wrong.</li>
+     * </ol>
+     *
+     * @param releaseHydrogen callback that actually emits this H (e.g. {@code () -> System.out.print("H")})
+     * @throws InterruptedException if the thread is interrupted while waiting for a ticket or partners
      */
     public void hydrogen(Runnable releaseHydrogen) throws InterruptedException {
         hSem.acquire();

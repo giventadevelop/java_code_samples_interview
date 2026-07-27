@@ -31,6 +31,9 @@ Similar public cousins:
 - Sports points table (3 for win, 1 for draw, 0 for loss)  
 - “Validate / filter teams that meet criteria” (admin approve/reject)
 
+**Plain-English walkthrough of `MatchResultsDemo.main`:**  
+see [`MatchResultsDemo_Main_Walkthrough.md`](MatchResultsDemo_Main_Walkthrough.md) (separate from this README).
+
 ---
 
 ## Problem statement (practice wording)

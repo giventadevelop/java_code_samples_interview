@@ -1,4 +1,4 @@
-package com.boot2;
+package com.boot2.h2o;
 
 /**
  * Continuous Oxygen source worker.

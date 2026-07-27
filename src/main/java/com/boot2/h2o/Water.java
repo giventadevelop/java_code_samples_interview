@@ -1,4 +1,4 @@
-package com.boot2;
+package com.boot2.h2o;
 
 /**
  * Result of one successful combine step: Water = 2 {@link Hydrogen} + 1 {@link Oxygen}.

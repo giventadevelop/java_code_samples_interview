@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plain-English guide to H2ODemo: Runnable, Thread, Semaphore, and CyclicBarrier">
+    <title>H2ODemo — Plain English Guide (Runnable, Thread, Semaphore, Barrier)</title>
+    <style>
+        body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+            color: #1a1a1a;
+        }
+        h2 {
+            font-size: 1.8em;
+            border-left: 4px solid #0066cc;
+            padding-left: 15px;
+            margin-top: 2em;
+            color: #1a1a1a;
+        }
+        h3 {
+            font-size: 1.4em;
+            color: #333;
+        }
+        h4 {
+            font-size: 1.2em;
+            color: #555;
+        }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc ul {
+            margin: 0.5em 0 0 1.2em;
+        }
+        .toc a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .section-intro {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e7f0 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .section-container {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .section-container.usage {
+            background: linear-gradient(135deg, #f0e6ff 0%, #e6ccff 100%);
+            border-left-color: #9c27b0;
+        }
+        .section-container.parameters {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left-color: #ff9800;
+        }
+        .section-container.output {
+            background: linear-gradient(135deg, #e6ffe6 0%, #ccffcc 100%);
+            border-left-color: #28a745;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 12px 20px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-header.usage {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+        }
+        .section-header.parameters {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        .section-header.output {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info code, .warning code, .success code, .error code,
+        .info .code-highlight, .warning .code-highlight,
+        .success .code-highlight, .error .code-highlight {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre, .code-block {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #b8d4e3;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        pre code {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            color: #0d3b66;
+        }
+        .script-name {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+        .parameters-list {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left: 4px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+        .parameters-list strong {
+            color: #e65100;
+        }
+        .parameters-list code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.2s ease;
+        }
+        td code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        .step-card {
+            background: white;
+            border: 2px solid #b8d4e3;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 12px 0;
+        }
+        .step-card h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .command-block {
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .command-block.setup {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #2196f3;
+        }
+        .command-block.verify {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #4caf50;
+        }
+        .command-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.45);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .command-type {
+            font-weight: bold;
+            color: #0d3b66;
+        }
+        .command-header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .copy-button, .copy-button-template {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .copy-button {
+            background-color: #0066cc;
+        }
+        .copy-button:hover {
+            background-color: #0052a3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .copy-button-template {
+            background-color: #6c757d;
+        }
+        .copy-button-template:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .copy-button.copied, .copy-button-template.copied {
+            background-color: #28a745;
+        }
+        .command-parameters {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .command-parameters h5 {
+            margin: 0 0 12px 0;
+            font-size: 0.9em;
+            color: #333;
+            font-weight: bold;
+        }
+        .parameter-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .parameter-group.single {
+            grid-template-columns: 1fr;
+        }
+        .parameter-input {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .parameter-input label {
+            font-size: 0.8em;
+            color: #555;
+            font-weight: 600;
+        }
+        .parameter-input input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .parameter-input input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        .command-content {
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            color: #0d3b66;
+            background: #e8f4f8;
+            border-top: 1px solid #b8d4e3;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .command-single-line {
+            padding: 12px 15px;
+            background: #e8f4f8;
+            border-top: 1px solid #b8d4e3;
+        }
+        .command-single-line-label {
+            color: #666;
+            font-size: 0.8em;
+            margin-bottom: 6px;
+        }
+        .command-single-line code {
+            display: block;
+            color: #0d3b66;
+            background: transparent;
+            border: none;
+            padding: 0;
+            word-break: break-all;
+        }
+        .prompt-block {
+            border: 2px solid #0066cc;
+            border-radius: 8px;
+            margin: 16px 0;
+            overflow: hidden;
+            background: #f0f7ff;
+        }
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.6);
+            border-bottom: 1px solid #b8d4e3;
+            font-weight: bold;
+            color: #0d3b66;
+        }
+        .prompt-body {
+            padding: 15px;
+            background: #e8f4f8;
+            color: #0d3b66;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.92em;
+            margin: 0;
+            border: none;
+        }
+        ol.plain > li {
+            margin: 0.6em 0;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .parameter-group { grid-template-columns: 1fr; }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <h1>H2ODemo — Plain English Guide</h1>
+
+    <div class="section-intro">
+        <p>
+            This page explains <code class="script-name">H2ODemo.java</code> in simple English:
+            what <code class="code-highlight">main</code> does step by step, what a
+            <code class="code-highlight">Runnable</code> is, whether calling
+            <code class="code-highlight">run()</code> starts a thread, and how
+            <code class="code-highlight">Semaphore</code> and
+            <code class="code-highlight">CyclicBarrier</code> work together inside
+            <code class="script-name">H2O.java</code>.
+        </p>
+        <p>
+            Package: <code class="code-highlight">com.boot2.simplified.h2o</code>
+            &nbsp;|&nbsp; Related: <code class="script-name">H2O.java</code>,
+            <code class="script-name">README.md</code>
+        </p>
+    </div>
+
+    <div class="toc">
+        <h2 style="border:none;padding:0;margin:0 0 10px 0;">Table of Contents</h2>
+        <ul>
+            <li><a href="#big-picture">1. Big picture</a></li>
+            <li><a href="#runnable-vs-thread">2. Runnable vs Thread (can you call run()?)</a></li>
+            <li><a href="#demo-step-by-step">3. H2ODemo.main step by step</a></li>
+            <li><a href="#semaphore-barrier">4. Semaphore + CyclicBarrier in H2O</a></li>
+            <li><a href="#how-connected">5. How they connect</a></li>
+            <li><a href="#how-to-run">6. How to run</a></li>
+        </ul>
+    </div>
+
+    <div class="section-container" id="big-picture">
+        <div class="section-header">1. Big picture — what is this demo?</div>
+        <p>
+            Imagine you want to make water: you need <strong>2 Hydrogen (H)</strong> and
+            <strong>1 Oxygen (O)</strong>. Many atoms arrive at once. The computer must not
+            let three Hydrogens go through alone.
+        </p>
+        <ul>
+            <li><code class="script-name">H2ODemo.java</code> — starts one <strong>thread per atom</strong> from a string like <code class="code-highlight">HOH</code>.</li>
+            <li><code class="script-name">H2O.java</code> — the reaction room rules (tickets + waiting for partners).</li>
+        </ul>
+        <div class="info">
+            <strong>Tip:</strong> <code class="code-highlight">H2ODemo</code> only creates threads and calls
+            <code class="code-highlight">h2o.hydrogen(...)</code> or <code class="code-highlight">h2o.oxygen(...)</code>.
+            The hard concurrency rules live in <code class="script-name">H2O.java</code>.
+        </div>
+    </div>
+
+    <div class="section-container parameters" id="runnable-vs-thread">
+        <div class="section-header parameters">2. Runnable vs Thread — can you call run()?</div>
+
+        <h3>What is a Runnable?</h3>
+        <p>
+            A <code class="code-highlight">Runnable</code> is just a small job: “here is work to do.”
+            It has one method: <code class="code-highlight">run()</code>.
+        </p>
+        <p>In this demo you see two kinds of Runnable jobs:</p>
+        <ol class="plain">
+            <li>
+                The <strong>atom job</strong> passed into <code class="code-highlight">new Thread(() -&gt; { ... })</code>
+                — that lambda <em>is</em> a Runnable. It calls <code class="code-highlight">hydrogen</code> or
+                <code class="code-highlight">oxygen</code>.
+            </li>
+            <li>
+                The <strong>print job</strong>
+                <code class="code-highlight">() -&gt; System.out.print("H")</code>
+                passed into <code class="code-highlight">hydrogen(...)</code> —
+                also a Runnable. Inside <code class="script-name">H2O</code>, after partners arrive,
+                the code calls <code class="code-highlight">releaseHydrogen.run()</code> to print
+                <code class="code-highlight">H</code>.
+            </li>
+        </ol>
+
+        <div class="warning">
+            <strong>Important:</strong> Calling <code class="code-highlight">runnable.run()</code>
+            or <code class="code-highlight">thread.run()</code> <strong>does NOT</strong> start a new thread.
+            It runs the work on the <strong>same thread that called it</strong> — like a normal method call.
+            To start parallel work you must call <code class="code-highlight">thread.start()</code>.
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>What you call</th>
+                    <th>What really happens</th>
+                    <th>Acts like a thread?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>myRunnable.run()</code></td>
+                    <td>Runs the job now, on the current thread</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td><code>myThread.run()</code></td>
+                    <td>Same — still the current thread (bad if you wanted parallel)</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td><code>myThread.start()</code></td>
+                    <td>JVM creates a new thread, then that thread calls <code>run()</code></td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td><code>releaseHydrogen.run()</code> inside H2O</td>
+                    <td>Just prints “H” on the atom’s worker thread (after barrier)</td>
+                    <td>No new thread — print only</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="success">
+            <strong>In H2ODemo:</strong> we wrap each atom in
+            <code class="code-highlight">new Thread(...)</code> and call
+            <code class="code-highlight">workers[i].start()</code>.
+            That is what makes atoms run at the same time.
+        </div>
+
+        <div class="prompt-block">
+            <div class="prompt-header">
+                <span>Memory tip (copy)</span>
+                <button type="button" class="copy-button" onclick="copyCommand(this, 'tip-runnable')"
+                        title="Copy tip to clipboard" aria-label="Copy tip to clipboard">Copy</button>
+            </div>
+            <pre class="prompt-body" id="tip-runnable">Runnable = the work.
+Thread = a worker that can run that work in parallel.
+run() = do the work now (same thread).
+start() = hire a new worker thread, then it calls run().</pre>
+        </div>
+    </div>
+
+    <div class="section-container usage" id="demo-step-by-step">
+        <div class="section-header usage">3. H2ODemo.main — step by step</div>
+
+        <div class="step-card">
+            <h4>Step A — Read the atom feed</h4>
+            <pre><code>String feed = args.length &gt; 0 ? args[0] : "HOH";</code></pre>
+            <p>
+                If you pass a string on the command line (like <code class="code-highlight">HOHHOH</code>), use it.
+                Otherwise use default <code class="code-highlight">HOH</code> (2 H + 1 O = one water).
+            </p>
+        </div>
+
+        <div class="step-card">
+            <h4>Step B — Create one shared H2O controller</h4>
+            <pre><code>H2O h2o = new H2O();</code></pre>
+            <p>
+                One shared “reaction room” for all atoms. Inside it: 2 H tickets, 1 O ticket,
+                and a barrier that waits for 3 atoms.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <h4>Step C — Make one Thread per letter</h4>
+            <pre><code>Thread[] workers = new Thread[feed.length()];
+// for each char: new Thread(() -&gt; h2o.hydrogen(...) or h2o.oxygen(...), "H-0")</code></pre>
+            <p>Plain English:</p>
+            <ul>
+                <li>Letter <code class="code-highlight">H</code> → thread named <code class="code-highlight">H-0</code>, <code class="code-highlight">H-1</code>, … that calls <code class="code-highlight">h2o.hydrogen(() -&gt; System.out.print("H"))</code></li>
+                <li>Letter <code class="code-highlight">O</code> → thread that calls <code class="code-highlight">h2o.oxygen(() -&gt; System.out.print("O"))</code></li>
+            </ul>
+            <p>
+                The lambda <code class="code-highlight">() -&gt; System.out.print("H")</code> is a
+                <strong>Runnable</strong>. It does not run yet. It runs later when
+                <code class="script-name">H2O</code> calls <code class="code-highlight">.run()</code>
+                after the barrier opens.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <h4>Step D — Start every thread</h4>
+            <pre><code>workers[i].start();</code></pre>
+            <p>
+                This is the real “go parallel” call. Each atom thread begins and tries to enter
+                the reaction room through <code class="code-highlight">hydrogen</code> /
+                <code class="code-highlight">oxygen</code>.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <h4>Step E — Wait until all atoms finish</h4>
+            <pre><code>for (Thread t : workers) {
+    t.join();
+}</code></pre>
+            <p>
+                <code class="code-highlight">join()</code> means: “main thread, wait here until that worker is done.”
+                So we do not print the final message too early.
+            </p>
+        </div>
+    </div>
+
+    <div class="section-container" id="semaphore-barrier">
+        <div class="section-header">4. Semaphore and CyclicBarrier in H2O (plain English)</div>
+
+        <h3>Semaphore = tickets / door slots</h3>
+        <div class="parameters-list">
+            <p><strong>In this class:</strong></p>
+            <ul>
+                <li><code>hSem = new Semaphore(2)</code> — only <strong>2 Hydrogen tickets</strong></li>
+                <li><code>oSem = new Semaphore(1)</code> — only <strong>1 Oxygen ticket</strong></li>
+                <li><code>acquire()</code> — take a ticket (wait if none left)</li>
+                <li><code>release()</code> — give the ticket back</li>
+            </ul>
+        </div>
+        <p>
+            Without tickets, 100 Hydrogens could all rush into the barrier and leave Oxygen out.
+            Tickets enforce chemistry: at most 2 H and 1 O waiting for a molecule.
+        </p>
+
+        <h3>CyclicBarrier = “wait for the full team”</h3>
+        <div class="parameters-list">
+            <p><strong>In this class:</strong></p>
+            <ul>
+                <li><code>barrier = new CyclicBarrier(3)</code> — need <strong>3</strong> arrivals (2H + 1O)</li>
+                <li><code>await()</code> — sit and wait until the 3rd friend arrives</li>
+                <li>When the 3rd arrives, all 3 wake up together, then the barrier resets for the next molecule</li>
+            </ul>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tool</th>
+                    <th>Simple job</th>
+                    <th>In H2O</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Semaphore</td>
+                    <td>Limit how many can enter</td>
+                    <td>Max 2 H, max 1 O in the chamber</td>
+                </tr>
+                <tr>
+                    <td>CyclicBarrier</td>
+                    <td>Wait until a group is complete</td>
+                    <td>Release only when 2H + 1O are ready</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-container output" id="how-connected">
+        <div class="section-header output">5. How Semaphore and CyclicBarrier connect</div>
+        <p>Inside <code class="code-highlight">hydrogen</code> (Oxygen is the same idea):</p>
+        <ol class="plain">
+            <li><strong>Ticket first</strong> — <code class="code-highlight">hSem.acquire()</code> (may wait if 2 H already inside).</li>
+            <li><strong>Then partners</strong> — <code class="code-highlight">barrier.await()</code> (may wait for the other H and the O).</li>
+            <li><strong>Then print</strong> — <code class="code-highlight">releaseHydrogen.run()</code> (prints H; this is NOT starting a thread).</li>
+            <li><strong>Always return ticket</strong> — <code class="code-highlight">hSem.release()</code> in <code class="code-highlight">finally</code>.</li>
+        </ol>
+
+        <div class="info">
+            <strong>Why both?</strong>
+            Barrier alone could let three Hydrogens through (all call await).
+            Semaphores force the mix to be 2H + 1O. Together: correct chemistry + release as a group.
+        </div>
+
+        <div class="error">
+            <strong>Common mistake:</strong>
+            Thinking <code class="code-highlight">releaseHydrogen.run()</code> starts another thread.
+            No — it only runs the print callback on the <strong>same</strong> worker thread that already passed the barrier.
+        </div>
+
+        <h4>Picture for feed <code class="code-highlight">HOH</code></h4>
+        <ol>
+            <li>Main creates 3 threads and calls <code class="code-highlight">start()</code> on each.</li>
+            <li>Two H threads take H tickets; one O thread takes the O ticket.</li>
+            <li>All three call <code class="code-highlight">await()</code> and wait for each other.</li>
+            <li>When all three are there, they print letters (order may be <code class="code-highlight">HOH</code>, <code class="code-highlight">OHH</code>, or <code class="code-highlight">HHO</code>).</li>
+            <li>Tickets are released; main <code class="code-highlight">join()</code>s and finishes.</li>
+        </ol>
+    </div>
+
+    <div class="section-container usage" id="how-to-run">
+        <div class="section-header usage">6. How to run</div>
+        <p>From the project root <code class="code-highlight">java_code_samples_interview</code>:</p>
+
+        <div class="command-block setup"
+             data-command-type="setup"
+             data-command-base="mvn -q -DskipTests compile"
+             data-template-command="mvn -q -DskipTests compile">
+            <div class="command-header">
+                <span class="command-type">Compile</span>
+                <div class="command-header-buttons">
+                    <button type="button" class="copy-button-template" onclick="copyTemplateCommand(this, 'cmd-compile')" title="Copy template command">Template</button>
+                    <button type="button" class="copy-button" onclick="copyCommand(this, 'cmd-compile')" title="Copy command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize Parameters:</h5>
+                <div class="parameter-group single">
+                    <div class="parameter-input">
+                        <label for="cmd-compile-note">Note (optional, not used in command):</label>
+                        <input type="text" id="cmd-compile-note" placeholder="no params" value="" oninput="updateCommand('cmd-compile', 'note', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="cmd-compile">mvn -q -DskipTests compile</div>
+            <div class="command-single-line" id="cmd-compile-single">
+                <div class="command-single-line-label">Windows Single-Line:</div>
+                <code id="cmd-compile-single-code">mvn -q -DskipTests compile</code>
+            </div>
+        </div>
+
+        <div class="command-block verify"
+             data-command-type="verify"
+             data-command-base="java -cp target/classes com.boot2.simplified.h2o.H2ODemo"
+             data-template-command="java -cp target/classes com.boot2.simplified.h2o.H2ODemo HOH">
+            <div class="command-header">
+                <span class="command-type">Run H2ODemo</span>
+                <div class="command-header-buttons">
+                    <button type="button" class="copy-button-template" onclick="copyTemplateCommand(this, 'cmd-run')" title="Copy template command">Template</button>
+                    <button type="button" class="copy-button" onclick="copyCommand(this, 'cmd-run')" title="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize Parameters:</h5>
+                <div class="parameter-group single">
+                    <div class="parameter-input">
+                        <label for="cmd-run-atom-feed">Atom feed (H and O only):</label>
+                        <input type="text" id="cmd-run-atom-feed" placeholder="HOH" value="HOH" oninput="updateCommand('cmd-run', 'atom-feed', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="cmd-run">java -cp target/classes com.boot2.simplified.h2o.H2ODemo HOH</div>
+            <div class="command-single-line" id="cmd-run-single">
+                <div class="command-single-line-label">Windows Single-Line:</div>
+                <code id="cmd-run-single-code">java -cp target/classes com.boot2.simplified.h2o.H2ODemo HOH</code>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>Valid output:</strong> letters for one molecule may appear as
+            <code class="code-highlight">HOH</code>, <code class="code-highlight">OHH</code>, or
+            <code class="code-highlight">HHO</code>. That is OK. Invalid overall ratios are not.
+        </div>
+    </div>
+
+    <div class="section-container">
+        <div class="section-header">Quick recap</div>
+        <ol>
+            <li><code class="script-name">H2ODemo</code> starts one <strong>Thread</strong> per atom with <code class="code-highlight">start()</code>.</li>
+            <li>A <strong>Runnable</strong> is only the job. <code class="code-highlight">run()</code> alone does not create a thread.</li>
+            <li><strong>Semaphore</strong> = limited tickets (2H, 1O).</li>
+            <li><strong>CyclicBarrier(3)</strong> = wait until the full set arrives, then print together.</li>
+            <li><code class="code-highlight">releaseHydrogen.run()</code> only prints — it does not start another thread.</li>
+        </ol>
+    </div>
+
+    <script>
+        const commandParams = {};
+
+        function updateCommandFromParams(commandId) {
+            const commandElement = document.getElementById(commandId);
+            if (!commandElement) return;
+            const commandBlock = commandElement.closest('.command-block');
+            if (!commandBlock) return;
+            let baseCommand = commandBlock.getAttribute('data-command-base') || '';
+            const params = commandParams[commandId] || {};
+            let command = baseCommand;
+
+            if (commandId === 'cmd-run') {
+                const feed = (params['atom-feed'] || '').trim();
+                if (feed) {
+                    command += ' ' + feed;
+                }
+            }
+            // cmd-compile has no CLI params
+
+            commandElement.textContent = command;
+            const singleLineCode = document.getElementById(commandId + '-single-code');
+            if (singleLineCode) {
+                singleLineCode.textContent = command;
+            }
+        }
+
+        function updateCommand(commandId, paramName, paramValue) {
+            if (!commandParams[commandId]) {
+                commandParams[commandId] = {};
+            }
+            commandParams[commandId][paramName] = paramValue;
+            updateCommandFromParams(commandId);
+        }
+
+        function fallbackCopy(text, button, resetLabel) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                button.classList.add('copied');
+                const original = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.textContent = resetLabel || original;
+                }, 2000);
+            } catch (e) {
+                console.error(e);
+            }
+            document.body.removeChild(ta);
+        }
+
+        function copyTemplateCommand(button, commandId) {
+            const commandBlock = button.closest('.command-block');
+            if (!commandBlock) return;
+            let templateCommand = commandBlock.getAttribute('data-template-command');
+            if (!templateCommand) {
+                const commandElement = document.getElementById(commandId);
+                if (!commandElement) return;
+                templateCommand = commandElement.textContent.trim();
+            }
+            templateCommand = templateCommand.replace(/&quot;/g, '"');
+            const resetLabel = 'Template';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(templateCommand).then(() => {
+                    button.classList.add('copied');
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.classList.remove('copied');
+                        button.textContent = resetLabel;
+                    }, 2000);
+                }).catch(() => fallbackCopy(templateCommand, button, resetLabel));
+            } else {
+                fallbackCopy(templateCommand, button, resetLabel);
+            }
+        }
+
+        function copyCommand(button, commandId) {
+            const commandElement = document.getElementById(commandId);
+            if (!commandElement) return;
+            const commandText = commandElement.textContent.trim();
+            const resetLabel = 'Copy';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(commandText).then(() => {
+                    button.classList.add('copied');
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.classList.remove('copied');
+                        button.textContent = resetLabel;
+                    }, 2000);
+                }).catch(() => fallbackCopy(commandText, button, resetLabel));
+            } else {
+                fallbackCopy(commandText, button, resetLabel);
+            }
+            const singleLineElement = document.getElementById(commandId + '-single');
+            if (singleLineElement) {
+                singleLineElement.classList.add('show');
+            }
+        }
+
+        function initializeCommands() {
+            document.querySelectorAll('.command-block[data-command-base]').forEach(block => {
+                const commandContent = block.querySelector('.command-content');
+                if (!commandContent) return;
+                const commandId = commandContent.id;
+                if (!commandId) return;
+                block.querySelectorAll('.parameter-input input').forEach(input => {
+                    const inputId = input.id;
+                    if (!inputId || !inputId.startsWith(commandId + '-')) return;
+                    const paramName = inputId.substring(commandId.length + 1);
+                    if (!commandParams[commandId]) {
+                        commandParams[commandId] = {};
+                    }
+                    commandParams[commandId][paramName] = input.value || '';
+                });
+                updateCommandFromParams(commandId);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeCommands();
+        });
+    </script>
+</body>
+</html>
