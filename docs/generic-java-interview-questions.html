@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generic Java interview questions: ExecutorService thread pools, synchronized vs ReentrantLock, concurrency locking">
+    <title>Generic Java Interview Questions</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.2em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.6em;
+        }
+
+        a { color: var(--accent); }
+
+        .meta {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin: 0.5em 0 1.5em;
+        }
+
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .callout.ok {
+            border-left-color: var(--ok);
+            background: var(--ok-bg);
+        }
+
+        .callout.warn {
+            border-left-color: var(--warn);
+            background: var(--warn-bg);
+        }
+
+        .callout.bad {
+            border-left-color: var(--bad);
+            background: var(--bad-bg);
+        }
+
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f3f6fa;
+            font-weight: 600;
+        }
+
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+
+        pre code {
+            border: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        ul.tight li { margin: 0.35em 0; }
+
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+            table { font-size: 0.88rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Generic Java Interview Questions</h1>
+        <p class="meta">
+            General Java concurrency interview Q&amp;A: ExecutorService pools,
+            <code>synchronized</code>, and <code>ReentrantLock</code>.
+            Related: <a href="karat-interview-java-questions.html">Karat Interview Java Questions</a>.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#thread-pool-limits">1. Thread pools / cached thread pools — infinite tasks or threads?</a></li>
+            <li><a href="#synchronized-vs-reentrantlock">2. <code>synchronized</code> vs manual locking with <code>ReentrantLock</code></a></li>
+            <li><a href="#summary">3. Quick summary</a></li>
+        </ul>
+    </nav>
+
+    <section id="thread-pool-limits">
+        <h2>1. Thread pools / cached thread pools — infinite tasks or threads?</h2>
+
+        <div class="question">
+            Question: With a thread pool or cached thread pool from
+            <code>ExecutorService</code>, is it possible to have an infinite number of
+            tasks or threads created, or is there a limitation?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong> You can submit a very large number of
+            <em>tasks</em>, but threads are never truly infinite. Limits depend on the
+            pool type. A cached thread pool has <strong>no configured max thread count</strong>
+            and can grow until the JVM/OS runs out of resources.
+        </div>
+
+        <h3>Cached thread pool — <code>Executors.newCachedThreadPool()</code></h3>
+        <ul class="tight">
+            <li><strong>Tasks:</strong> you can submit a very large number of tasks
+                (limited by memory and how work is accepted, not by a fixed task cap).</li>
+            <li><strong>Threads:</strong> the pool can grow <em>without a fixed upper bound</em>.
+                Idle threads are reused and typically die after 60 seconds of idle time.
+                If work keeps arriving faster than threads finish, new threads keep being created.</li>
+            <li>So it is <strong>not truly infinite</strong>, but there is
+                <strong>no configured maximum pool size</strong>.</li>
+        </ul>
+
+        <p>Practical limits still apply:</p>
+        <ul class="tight">
+            <li>OS / JVM maximum threads</li>
+            <li>Memory (each thread has a stack; often ~1MB by default)</li>
+            <li>CPU time wasted on context switching</li>
+        </ul>
+
+        <div class="callout bad">
+            Under heavy load, a cached pool can create so many threads that the JVM or
+            machine becomes unstable. Prefer a bounded pool in production.
+        </div>
+
+<pre><code>ExecutorService cached = Executors.newCachedThreadPool();
+// Creates threads as needed; idle threads reused; no maxPoolSize cap
+cached.execute(() -&gt; doWork());
+</code></pre>
+
+        <h3>Fixed / bounded pools (safer)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pool</th>
+                    <th>Threads</th>
+                    <th>Tasks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>newFixedThreadPool(n)</code></td>
+                    <td>Max <code>n</code> threads</td>
+                    <td>Unbounded queue → effectively unlimited queued tasks (memory risk)</td>
+                </tr>
+                <tr>
+                    <td><code>newCachedThreadPool()</code></td>
+                    <td>Unbounded thread growth</td>
+                    <td>Tasks tend to run immediately; many threads under load</td>
+                </tr>
+                <tr>
+                    <td><code>ThreadPoolExecutor</code> with bounded queue + <code>maxPoolSize</code></td>
+                    <td>Capped thread count</td>
+                    <td>Capped queue; then a rejection policy applies</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Production recommendation</h3>
+        <p>
+            Prefer an explicit <code>ThreadPoolExecutor</code> with:
+        </p>
+        <ul class="tight">
+            <li><code>corePoolSize</code></li>
+            <li><code>maximumPoolSize</code></li>
+            <li>a <strong>bounded</strong> work queue</li>
+            <li>a <strong>rejection policy</strong>
+                (<code>AbortPolicy</code>, <code>CallerRunsPolicy</code>,
+                <code>DiscardPolicy</code>, or <code>DiscardOldestPolicy</code></li>
+        </ul>
+
+<pre><code>int cores = Runtime.getRuntime().availableProcessors();
+ExecutorService pool = new ThreadPoolExecutor(
+        cores,                 // corePoolSize
+        cores * 2,             // maximumPoolSize
+        60L, TimeUnit.SECONDS,
+        new ArrayBlockingQueue&lt;&gt;(1000),  // bounded queue
+        new ThreadPoolExecutor.CallerRunsPolicy()
+);
+</code></pre>
+
+        <h3>Interview one-liner</h3>
+        <div class="callout">
+            Cached pools can create <strong>unbounded threads</strong>; fixed pools cap threads
+            but may queue <strong>unbounded tasks</strong>. True backpressure needs both a
+            <strong>max pool size</strong> and a <strong>bounded queue</strong> (plus a rejection policy).
+        </div>
+    </section>
+
+    <section id="synchronized-vs-reentrantlock">
+        <h2>2. <code>synchronized</code> vs manual locking with <code>ReentrantLock</code></h2>
+
+        <div class="question">
+            Question: What does the <code>synchronized</code> keyword do, and how is it different
+            from manually handling a lock object with <code>ReentrantLock</code>
+            (<code>lock()</code> / <code>unlock()</code> and related methods?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            <code>synchronized</code> is a built-in language feature: the JVM acquires and releases
+            the monitor for you (even if an exception is thrown).
+            <code>ReentrantLock</code> is an explicit API lock from
+            <code>java.util.concurrent.locks</code> — you call <code>lock()</code> /
+            <code>unlock()</code> yourself (usually in <code>try/finally</code>) and get extra
+            features that <code>synchronized</code> does not provide.
+        </div>
+
+        <h3>What <code>synchronized</code> does</h3>
+        <p>
+            <code>synchronized</code> uses an object’s <strong>intrinsic monitor lock</strong>
+            (sometimes called a mutex). Only one thread at a time can hold that monitor for a
+            given object (or class, for static synchronized methods).
+        </p>
+        <ul class="tight">
+            <li><strong>Synchronized method:</strong> locks on <code>this</code> (instance) or
+                the <code>Class</code> object (static).</li>
+            <li><strong>Synchronized block:</strong> locks on whatever object you name
+                (prefer a private final lock object).</li>
+            <li>Entry acquires the lock; exit (normal or exceptional) releases it automatically.</li>
+            <li>It is <strong>reentrant</strong>: the same thread can enter another synchronized
+                method/block on the same monitor without deadlocking itself.</li>
+            <li>Waiting/signaling uses <code>wait()</code>, <code>notify()</code>,
+                <code>notifyAll()</code> on the same monitor object.</li>
+        </ul>
+
+<pre><code>private final Object lock = new Object();
+private int count;
+
+public void increment() {
+    synchronized (lock) {   // JVM acquires lock
+        count++;
+    }                       // JVM releases lock automatically
+}
+</code></pre>
+
+        <h3>What <code>ReentrantLock</code> is</h3>
+        <p>
+            <code>ReentrantLock</code> is a <strong>separate lock object</strong> you create and
+            manage in code. It is also reentrant (same thread can lock multiple times and must
+            unlock the same number of times), but acquisition/release is <em>manual</em>.
+        </p>
+
+<pre><code>private final ReentrantLock lock = new ReentrantLock();
+private int count;
+
+public void increment() {
+    lock.lock();                 // you acquire
+    try {
+        count++;
+    } finally {
+        lock.unlock();           // you must release — always in finally
+    }
+}
+</code></pre>
+
+        <div class="callout bad">
+            Forgetting <code>unlock()</code> (especially when an exception is thrown) leaves the
+            lock held forever for other threads. That is the main foot-gun versus
+            <code>synchronized</code>, which always releases on block exit.
+        </div>
+
+        <h3>Core differences</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th><code>synchronized</code></th>
+                    <th><code>ReentrantLock</code></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>How you use it</td>
+                    <td>Language keyword / block</td>
+                    <td>API methods on a lock object</td>
+                </tr>
+                <tr>
+                    <td>Lock release</td>
+                    <td>Automatic at end of block/method</td>
+                    <td>Manual <code>unlock()</code> (use <code>try/finally</code>)</td>
+                </tr>
+                <tr>
+                    <td>Try without blocking</td>
+                    <td>Not available</td>
+                    <td><code>tryLock()</code></td>
+                </tr>
+                <tr>
+                    <td>Timed wait for lock</td>
+                    <td>Not available</td>
+                    <td><code>tryLock(timeout, unit)</code></td>
+                </tr>
+                <tr>
+                    <td>Interruptible lock acquire</td>
+                    <td>Cannot interrupt while blocked entering synchronized</td>
+                    <td><code>lockInterruptibly()</code></td>
+                </tr>
+                <tr>
+                    <td>Fairness option</td>
+                    <td>Not configurable (JVM scheduling)</td>
+                    <td><code>new ReentrantLock(true)</code> for fair FIFO-ish ordering</td>
+                </tr>
+                <tr>
+                    <td>Multiple wait conditions</td>
+                    <td>One wait-set per monitor (<code>wait/notify</code>)</td>
+                    <td>Multiple <code>Condition</code> objects via <code>newCondition()</code></td>
+                </tr>
+                <tr>
+                    <td>Lock inspection</td>
+                    <td>Limited</td>
+                    <td><code>isLocked()</code>, <code>getHoldCount()</code>,
+                        <code>hasQueuedThreads()</code>, etc.</td>
+                </tr>
+                <tr>
+                    <td>Typical style</td>
+                    <td>Simpler, less error-prone for basic mutual exclusion</td>
+                    <td>More flexible when you need timeouts, try-lock, fairness, conditions</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Important <code>ReentrantLock</code> methods</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>What it does</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>lock()</code></td>
+                    <td>Acquire the lock; wait indefinitely if held by another thread</td>
+                </tr>
+                <tr>
+                    <td><code>lockInterruptibly()</code></td>
+                    <td>Like <code>lock()</code>, but can be interrupted while waiting</td>
+                </tr>
+                <tr>
+                    <td><code>tryLock()</code></td>
+                    <td>Acquire immediately if free; otherwise return <code>false</code> (no wait)</td>
+                </tr>
+                <tr>
+                    <td><code>tryLock(time, unit)</code></td>
+                    <td>Wait up to a timeout, then give up</td>
+                </tr>
+                <tr>
+                    <td><code>unlock()</code></td>
+                    <td>Release the lock; must be called by the holding thread</td>
+                </tr>
+                <tr>
+                    <td><code>newCondition()</code></td>
+                    <td>Create a <code>Condition</code> for await/signal (like wait/notify, but flexible)</td>
+                </tr>
+                <tr>
+                    <td><code>isHeldByCurrentThread()</code></td>
+                    <td>Check whether this thread currently holds the lock</td>
+                </tr>
+            </tbody>
+        </table>
+
+<pre><code>ReentrantLock lock = new ReentrantLock();
+
+if (lock.tryLock(200, TimeUnit.MILLISECONDS)) {
+    try {
+        // critical section
+    } finally {
+        lock.unlock();
+    }
+} else {
+    // could not get the lock in time — do something else
+}
+</code></pre>
+
+        <h3>When to prefer which</h3>
+        <ul class="tight">
+            <li><strong>Prefer <code>synchronized</code></strong> for simple mutual exclusion:
+                short critical sections, no need for timeout/try-lock/fairness.
+                Less code, automatic unlock, harder to misuse.</li>
+            <li><strong>Prefer <code>ReentrantLock</code></strong> when you need:
+                <ul>
+                    <li>try-lock / timed lock (avoid indefinite blocking)</li>
+                    <li>interruptible acquisition</li>
+                    <li>fair locking</li>
+                    <li>multiple condition queues (producer/consumer with separate wait sets)</li>
+                    <li>lock hand-off patterns that do not fit a single synchronized block structure</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="callout warn">
+            <strong>Note:</strong> Both are reentrant. “Reentrant” means the same thread can
+            acquire the same lock again (for example method A synchronized calls method B
+            synchronized on the same object). It does <em>not</em> mean different threads can
+            enter at the same time.
+        </div>
+
+        <h3>Interview one-liner</h3>
+        <div class="callout">
+            <code>synchronized</code> = automatic intrinsic monitor lock.
+            <code>ReentrantLock</code> = explicit lock API with
+            <code>lock/unlock</code>, <code>tryLock</code>, timeouts, fairness, and
+            <code>Condition</code> — more power, more responsibility to unlock in
+            <code>finally</code>.
+        </div>
+    </section>
+
+    <section id="summary">
+        <h2>3. Quick summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Rule of thumb</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Infinite tasks?</td>
+                    <td>Often effectively yes if the queue is unbounded — memory is the real limit</td>
+                </tr>
+                <tr>
+                    <td>Infinite threads?</td>
+                    <td>No hard “infinite,” but cached pools have no max size and can grow until failure</td>
+                </tr>
+                <tr>
+                    <td>Safe default for pools</td>
+                    <td>Bounded <code>ThreadPoolExecutor</code> + bounded queue + rejection policy</td>
+                </tr>
+                <tr>
+                    <td><code>synchronized</code> vs <code>ReentrantLock</code></td>
+                    <td>Use synchronized for simple cases; ReentrantLock when you need tryLock, timeout, fairness, or Conditions</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        Documentation for the java_code_samples_interview repository.
+        Open this file in a browser for readable formatting.
+        Path: <code>docs/generic-java-interview-questions.html</code>
+    </footer>
+</body>
+</html>

@@ -30,8 +30,10 @@ public class BracketMatcher {
     }
 
     public static void main(String[] args) {
+
+        String input = "{[]}";
 //        String input = "{{][}}";
-        String input = "{[}]";
+//        String input = "{[}]";
         boolean result = areBracketsMatched(input);
         
         System.out.println("Are brackets matched? " + result);

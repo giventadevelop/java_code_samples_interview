@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WhatsApp interview screenshots Q&amp;A: Spring Boot, microservices, AWS, Kubernetes, Java, SQL, Angular, Copilot">
+    <title>WhatsApp Interview Questions — Combined Q&amp;A</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.4em;
+        }
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.8em;
+        }
+        a { color: var(--accent); }
+        .meta { color: var(--muted); font-size: 0.95rem; margin: 0.5em 0 1.5em; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+        .callout.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+        .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+        .callout.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 0.8em;
+            font-weight: 600;
+        }
+        .qa {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 1.8em;
+            background: #fafbfc;
+        }
+        .tag {
+            display: inline-block;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 0.1em 0.65em;
+            font-size: 0.8rem;
+            margin-right: 0.35em;
+        }
+        .src { color: var(--muted); font-size: 0.85rem; margin-top: 0.4em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: #f3f6fa; font-weight: 600; }
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { border: 0; padding: 0; background: transparent; }
+        ul.tight li { margin: 0.35em 0; }
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WhatsApp Interview Questions — Combined Q&amp;A</h1>
+        <p class="meta">
+            Parsed from screenshot folders
+            <code>WhatsApp_interview_qns_1</code> and
+            <code>WhatsApp_interview_qns_2</code>.
+            Style matches
+            <a href="generic-java-interview-questions.html">generic-java-interview-questions.html</a>.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#folder1">Part A — Folder 1 (Coderbyte / RE Partners)</a>
+                <ul>
+                    <li><a href="#f1-spring">Spring Boot &amp; microservices</a></li>
+                    <li><a href="#f1-devops">DevOps / DORA</a></li>
+                    <li><a href="#f1-aws">AWS</a></li>
+                    <li><a href="#f1-k8s">Kubernetes</a></li>
+                    <li><a href="#f1-coding">Coding challenge</a></li>
+                </ul>
+            </li>
+            <li><a href="#folder2">Part B — Folder 2 (Java / SQL / Angular / Copilot)</a>
+                <ul>
+                    <li><a href="#f2-java">Java &amp; concurrency</a></li>
+                    <li><a href="#f2-sql">SQL &amp; performance</a></li>
+                    <li><a href="#f2-angular">Angular</a></li>
+                    <li><a href="#f2-copilot">GitHub Copilot</a></li>
+                </ul>
+            </li>
+            <li><a href="#summary">Quick answer key</a></li>
+        </ul>
+    </nav>
+
+    <!-- ===================== FOLDER 1 ===================== -->
+    <section id="folder1">
+        <h2>Part A — Folder 1 (Coderbyte / RE Partners)</h2>
+        <p class="meta">Source: <code>E:\Categories\code_backup\WhatsApp_interview_qns_1</code> (19 images → 18 distinct questions)</p>
+
+        <h3 id="f1-spring">Spring Boot &amp; microservices</h3>
+
+        <div class="qa" id="q-spring-boot-goal">
+            <div class="question">What is the primary goal of the Spring Boot framework?</div>
+            <span class="tag">Spring Boot</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Simplify configuring and deploying Spring applications
+                (auto-configuration, starters, embedded servers — not a replacement language,
+                and not “replace Spring entirely”).
+            </div>
+            <p class="src">Source: WhatsApp Image 2026-08-02 at 5.02.49 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Why might the strangler pattern be recommended when migrating a monolith to microservices?</div>
+            <span class="tag">Microservices</span><span class="tag">Strangler</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> It allows gradual replacement of monolith components with
+                microservices (route traffic piece by piece) instead of a risky big-bang rewrite.
+            </div>
+            <p class="src">Source: …5.06.01 PM.jpeg / …5.06.22 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Which statement accurately represents a key advantage of microservices over monoliths?</div>
+            <span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Services can be deployed and scaled independently → faster
+                releases and better resource utilization. Microservices do <em>not</em> magically
+                mean fewer bugs, cheaper compute, or no inter-service communication.
+            </div>
+            <p class="src">Source: …5.10.57 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">In defining a microservices architecture, which step identifies distinct business-domain areas so services align with business concerns?</div>
+            <span class="tag">DDD</span><span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Defining subdomains</strong> (domain-driven design:
+                core / supporting / generic subdomains → bounded contexts → services).
+            </div>
+            <p class="src">Source: …5.12.35 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Why is loose coupling between services a fundamental microservices principle?</div>
+            <span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Changes in one service have minimal impact on others,
+                so teams can evolve and deploy independently. Sharing one DB or forcing the same
+                language increases coupling.
+            </div>
+            <p class="src">Source: …5.14.03 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">What is a potential drawback of an excessively fine-grained architecture (too many tiny services)?</div>
+            <span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Interaction complexity rises — more network hops,
+                distributed transactions, and collaboration/orchestration overhead.
+            </div>
+            <p class="src">Source: …5.15.15 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Which statement best describes a primary goal of adopting microservices?</div>
+            <span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Teams can work and release more independently with less
+                cross-team coordination overhead. Goals are <em>not</em> “increase interdependencies”
+                or “one shared database / one language everywhere.”
+            </div>
+            <p class="src">Source: …5.19.00 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">What does it mean for a service to be “independently deployable”?</div>
+            <span class="tag">Microservices</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> It is packaged as its own deployable unit and can go to
+                production after isolated testing — without requiring simultaneous redeploy of all
+                dependent services.
+            </div>
+            <p class="src">Source: …5.21.24 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Which communication pattern is best when a service must broadcast an event to many services without expecting an immediate response?</div>
+            <span class="tag">Messaging</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Event-driven / Publish-Subscribe</strong>
+                (Kafka, SNS/SQS, etc.). Request/Response and RPC expect a reply; DB integration
+                couples services.
+            </div>
+            <p class="src">Source: …5.22.42 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Why should each microservice own its data model?</div>
+            <span class="tag">Data ownership</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Avoid shared databases so one service’s schema/data changes
+                do not break others. Services integrate via APIs/events, not by reading each
+                other’s tables.
+            </div>
+            <p class="src">Source: …5.24.02 PM.jpeg</p>
+        </div>
+
+        <h3 id="f1-devops">DevOps / DORA</h3>
+
+        <div class="qa">
+            <div class="question">Which DORA metric primarily measures time from code commit to production deployment?</div>
+            <span class="tag">DORA</span><span class="tag">DevOps</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Lead Time for Changes</strong>.
+                (Deployment Frequency = how often; Change Failure Rate = % bad deploys;
+                Time to Restore = MTTR after incidents.)
+            </div>
+            <p class="src">Source: …5.16.23 PM.jpeg</p>
+        </div>
+
+        <h3 id="f1-aws">AWS</h3>
+
+        <div class="qa">
+            <div class="question">Sales docs need durable storage that also protects against accidental deletes. Which action helps?</div>
+            <span class="tag">AWS</span><span class="tag">S3</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Use an <strong>S3 bucket with versioning</strong>
+                (recover overwritten/deleted object versions). Cross-region buckets help DR but
+                do not by themselves undo accidental deletes; EBS/EC2 instance storage is wrong
+                for durable shared document storage.
+            </div>
+            <p class="src">Source: …5.25.37 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Need a highly available relational DB, start at 8 TB, grow ~8 GB/day, ≥ 8 read replicas. Which service?</div>
+            <span class="tag">AWS</span><span class="tag">Aurora</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Amazon Aurora</strong> (MySQL/Postgres compatible,
+                HA, large storage, supports many read replicas). S3 is object storage; DynamoDB is
+                NoSQL; Redshift is analytics/warehouse.
+            </div>
+            <p class="src">Source: …5.26.42 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Relational DB on EC2 needs a single EBS volume supporting up to 16,000 IOPS. Which volume type?</div>
+            <span class="tag">AWS</span><span class="tag">EBS</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Provisioned IOPS SSD (io1/io2)</strong>.
+                Cold HDD / Throughput Optimized HDD are for throughput, not high random IOPS;
+                General Purpose SSD (gp2/gp3) typically cannot meet 16k IOPS on a single volume
+                without provisioned IOPS (depending on size/config — exam answer is Provisioned IOPS).
+            </div>
+            <p class="src">Source: …5.27.58 PM.jpeg</p>
+        </div>
+
+        <h3 id="f1-k8s">Kubernetes</h3>
+
+        <div class="qa">
+            <div class="question">In Kubernetes, which API object is used to manage rolling updates for deployments?</div>
+            <span class="tag">Kubernetes</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Deployment</strong> (strategy type
+                <code>RollingUpdate</code>). ReplicaSet maintains replicas; StatefulSet/DaemonSet
+                are other workload controllers. “RollingUpdate” alone is a strategy, not the
+                primary API object — if options list Deployment-related choices, pick Deployment;
+                if the listed options were ReplicaSet / RollingUpdate / StatefulSet / DaemonSet,
+                the intended exam pick is often the Deployment’s rolling-update mechanism
+                (commonly mis-optioned as “RollingUpdate”). Prefer: <em>Deployment with RollingUpdate strategy</em>.
+            </div>
+            <div class="callout warn">
+                If the MCQ options literally were ReplicaSet, RollingUpdate, StatefulSet, DaemonSet
+                (no Deployment), the closest intended choice is usually <strong>RollingUpdate</strong>
+                as the update strategy name — but in real K8s, you configure that on a
+                <strong>Deployment</strong>.
+            </div>
+            <p class="src">Source: …5.29.22 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Which Kubernetes component ensures the cluster’s desired state matches its current state?</div>
+            <span class="tag">Kubernetes</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>kube-controller-manager</strong> (controllers
+                reconcile desired vs actual). kube-apiserver is the API front door;
+                kube-scheduler places pods; kubelet runs pods on a node.
+            </div>
+            <p class="src">Source: …5.31.16 PM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">What is the primary purpose of Labels and Selectors in Kubernetes?</div>
+            <span class="tag">Kubernetes</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Organize and select subsets of objects
+                (e.g. Service selects Pods by label). Not for secrets, network policies, or
+                Ingress by themselves.
+            </div>
+            <p class="src">Source: …5.32.50 PM.jpeg</p>
+        </div>
+
+        <h3 id="f1-coding">Coding challenge</h3>
+
+        <div class="qa">
+            <div class="question">Java API Fetch and Count — GET <code>https://coderbyte.com/api/challenges/json/all-posts</code>, return/print the number of posts.</div>
+            <span class="tag">Java</span><span class="tag">HTTP</span><span class="tag">JSON</span>
+            <div class="callout ok">
+                <strong>Approach:</strong> HTTP GET the URL, parse JSON array, return
+                <code>array.length</code>, print <code>Number of posts: X</code>.
+                Use <code>HttpClient</code> (Java 11+) or <code>HttpURLConnection</code> + Gson/Jackson.
+            </div>
+<pre><code>public static int fetchAndCountPosts() throws Exception {
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest req = HttpRequest.newBuilder(
+            URI.create("https://coderbyte.com/api/challenges/json/all-posts"))
+            .GET().build();
+    String body = client.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    JsonArray posts = JsonParser.parseString(body).getAsJsonArray(); // Gson
+    int count = posts.size();
+    System.out.println("Number of posts: " + count);
+    return count;
+}
+</code></pre>
+            <p class="src">Source: …5.35.06 PM.jpeg</p>
+        </div>
+    </section>
+
+    <!-- ===================== FOLDER 2 ===================== -->
+    <section id="folder2">
+        <h2>Part B — Folder 2 (Java / SQL / Angular / Copilot)</h2>
+        <p class="meta">Source: <code>E:\Categories\code_backup\WhatsApp_interview_qns_2</code> (15 images → 13 distinct questions)</p>
+
+        <h3 id="f2-java">Java &amp; concurrency</h3>
+
+        <div class="qa">
+            <div class="question">Minimum Cost Path — implement <code>minpath(List&lt;List&lt;Integer&gt;&gt; a)</code> from top-left to bottom-right minimizing sum of cell costs. N,M ≤ 50.</div>
+            <span class="tag">DP</span><span class="tag">Java</span>
+            <div class="callout ok">
+                <strong>Answer approach:</strong> Classic DP grid path (right/down only, unless
+                stated otherwise). Let <code>dp[i][j] = a[i][j] + min(dp[i-1][j], dp[i][j-1])</code>
+                with careful first row/column fills. Examples cited: 5×5 → 327; 2×2 → 63.
+            </div>
+<pre><code>public static int minpath(List&lt;List&lt;Integer&gt;&gt; a) {
+    int n = a.size(), m = a.get(0).size();
+    int[][] dp = new int[n][m];
+    dp[0][0] = a.get(0).get(0);
+    for (int j = 1; j &lt; m; j++) dp[0][j] = dp[0][j-1] + a.get(0).get(j);
+    for (int i = 1; i &lt; n; i++) dp[i][0] = dp[i-1][0] + a.get(i).get(0);
+    for (int i = 1; i &lt; n; i++)
+        for (int j = 1; j &lt; m; j++)
+            dp[i][j] = a.get(i).get(j) + Math.min(dp[i-1][j], dp[i][j-1]);
+    return dp[n-1][m-1];
+}
+</code></pre>
+            <p class="src">Source: …1.31.29 / 1.38.12 / 2.03.31 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Multiple ways to create threads in Java — fill blanks: Worker implements ___, method ___(), and t.___</div>
+            <span class="tag">Multithreading</span>
+            <div class="callout ok">
+                <strong>Answer:</strong>
+                <code>Worker implements Runnable</code>, override <code>run()</code>,
+                start with <code>t.start()</code> (never call <code>run()</code> directly if you
+                want a new thread).
+            </div>
+            <p class="src">Source: …1.44.03 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Behavior of code with interfaces CanClimb / CanClimbTrees, abstract Chipmunk, concrete EasternChipmunk implementing only chew()?</div>
+            <span class="tag">Interfaces</span><span class="tag">Abstract class</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Compilation fails because <code>EasternChipmunk</code>
+                does not implement required interface methods such as <code>climb()</code>
+                (typical “fails at the concrete class line”). Abstract classes may leave interface
+                methods unimplemented; concrete classes may not.
+            </div>
+            <p class="src">Source: …1.45.48 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Advantages of Java 21 <code>StructuredTaskScope</code> over <code>CompletableFuture.allOf()</code> for a search aggregator? (select all that apply)</div>
+            <span class="tag">Java 21</span><span class="tag">Structured concurrency</span>
+            <div class="callout ok">
+                <strong>Best answers typically include:</strong>
+                <ul class="tight">
+                    <li>Clear parent/child task lifecycle — fewer thread leaks / orphaned tasks on cancel</li>
+                    <li>Built-in deadline / cancellation propagation</li>
+                </ul>
+                Structured concurrency does <em>not</em> mean “no try-catch needed,” and forked
+                virtual-thread tasks are not “blocking platform threads” as a selling point.
+                Partial-result policies depend on scope subclass (e.g. ShutdownOnFailure vs custom).
+            </div>
+            <p class="src">Source: …1.47.07 AM.jpeg</p>
+        </div>
+
+        <h3 id="f2-sql">SQL &amp; performance</h3>
+
+        <div class="qa">
+            <div class="question">From table <code>olympic</code>, list each country’s athlete count; only countries with more than five athletes. Columns: country | athlete count.</div>
+            <span class="tag">SQL</span>
+            <div class="callout ok">
+                <strong>Answer:</strong>
+            </div>
+<pre><code>SELECT country, COUNT(*) AS "athlete count"
+FROM olympic
+GROUP BY country
+HAVING COUNT(*) &gt; 5;
+</code></pre>
+            <p class="src">Source: …1.48.38 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Query causes high disk I/O from excessive sorting. What optimization reduces sorting overhead?</div>
+            <span class="tag">SQL tuning</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Create an <strong>index on the sorting columns</strong>
+                (ORDER BY / GROUP BY keys) so the engine can avoid or reduce filesorts.
+                Parallelism/MAXDOP/NOLOCK are not the primary fix for sort I/O.
+            </div>
+            <p class="src">Source: …1.51.22 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Optimize: <code>SELECT * FROM orders WHERE status = 'pending' AND total_amount &gt; 100;</code> (select all that apply)</div>
+            <span class="tag">SQL tuning</span>
+            <div class="callout ok">
+                <strong>Good techniques:</strong>
+                <ul class="tight">
+                    <li>Index on <code>status</code> (and/or composite with <code>total_amount</code>)</li>
+                    <li>Index on <code>total_amount</code> if selective</li>
+                    <li>Covering index including selected columns</li>
+                    <li>Replace <code>SELECT *</code> with needed columns</li>
+                </ul>
+                Partitioning by status can help very large tables but is heavier than indexing.
+            </div>
+            <p class="src">Source: …1.52.07 AM.jpeg</p>
+        </div>
+
+        <h3 id="f2-angular">Angular</h3>
+
+        <div class="qa">
+            <div class="question">Template-driven form — how do you get the email value from the form?</div>
+            <span class="tag">Angular</span><span class="tag">Forms</span>
+            <div class="callout ok">
+                <strong>Answer (template-driven):</strong> use <code>ngModel</code> /
+                template reference variable, e.g.
+                <code>&lt;input name="email" ngModel #email="ngModel"&gt;</code>
+                then read <code>email.value</code> or the NgForm value map.
+                <br>If the snippet actually shows <code>FormGroup</code> / <code>[formGroup]</code>,
+                that is <em>reactive</em> forms: <code>this.form.get('email')?.value</code>.
+            </div>
+            <p class="src">Source: …1.53.02 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Dashboard reads route param and loads account details — fill blanks with RxJS operators used with <code>toSignal</code>.</div>
+            <span class="tag">Angular</span><span class="tag">Signals</span><span class="tag">RxJS</span>
+            <div class="callout ok">
+                <strong>Typical blanks:</strong>
+                <code>map</code> (extract param) →
+                <code>distinctUntilChanged</code> (skip duplicate ids) →
+                <code>switchMap</code> (cancel in-flight load when param changes).
+            </div>
+            <p class="src">Source: …1.55.09 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Correct way to define a lazy-loaded route for UserProfile module in Angular 17?</div>
+            <span class="tag">Angular</span><span class="tag">Routing</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> modern standalone/lazy style with dynamic import, e.g.
+                <code>loadChildren: () =&gt; import('./user-profile/…').then(m =&gt; m.ROUTES)</code>
+                or <code>loadComponent</code> for a standalone component route.
+                Avoid old string <code>loadChildren: './path#Module'</code> syntax.
+            </div>
+            <p class="src">Source: …1.56.45 AM.jpeg</p>
+        </div>
+
+        <h3 id="f2-copilot">GitHub Copilot</h3>
+
+        <div class="qa">
+            <div class="question">Copilot suggestion exfiltrated secrets via telemetry (<code>payload["env"] = dict(os.environ)</code>). Best practical mitigation?</div>
+            <span class="tag">Copilot</span><span class="tag">Security</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Prefer organizational controls such as
+                <strong>CI secret scanning + egress/policy checks</strong> (and block shipping
+                code that dumps <code>os.environ</code>). Disabling Copilot only for one language/path
+                or relying only on manual review is weaker as a systemic fix.
+            </div>
+            <p class="src">Source: …1.57.59 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Copilot keeps suggesting deprecated DTOs. What change most likely shifts suggestions to internal API conventions?</div>
+            <span class="tag">Copilot</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> Provide <strong>curated examples + ignore/exclude rules</strong>
+                for legacy/deprecated paths so Copilot’s context favors current patterns
+                (custom instructions / excluded files). Renaming folders alone is weaker than
+                giving good examples and hiding bad ones from context.
+            </div>
+            <p class="src">Source: …1.59.26 AM.jpeg</p>
+        </div>
+
+        <div class="qa">
+            <div class="question">Generated Copilot snippet has a security vulnerability. What should you do?</div>
+            <span class="tag">Copilot</span><span class="tag">Security</span>
+            <div class="callout ok">
+                <strong>Answer:</strong> <strong>Fix the vulnerability before merge</strong>.
+                Treat Copilot like any other untrusted generator — review, harden, then ship.
+                Do not merge as-is or ignore.
+            </div>
+            <p class="src">Source: …2.01.26 AM.jpeg</p>
+        </div>
+    </section>
+
+    <section id="summary">
+        <h2>Quick answer key</h2>
+        <table>
+            <thead>
+                <tr><th>#</th><th>Topic</th><th>Short answer</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>A1</td><td>Spring Boot goal</td><td>Simplify Spring config/deploy</td></tr>
+                <tr><td>A2</td><td>Strangler</td><td>Gradual monolith → microservices replacement</td></tr>
+                <tr><td>A3</td><td>Microservices advantage</td><td>Independent deploy/scale</td></tr>
+                <tr><td>A4</td><td>Domain step</td><td>Defining subdomains</td></tr>
+                <tr><td>A5</td><td>Loose coupling</td><td>Isolate change impact</td></tr>
+                <tr><td>A6</td><td>Too fine-grained</td><td>Interaction complexity</td></tr>
+                <tr><td>A7</td><td>DORA</td><td>Lead Time for Changes</td></tr>
+                <tr><td>A8</td><td>Goal</td><td>Independent team delivery</td></tr>
+                <tr><td>A9</td><td>Independently deployable</td><td>Own package + isolated release</td></tr>
+                <tr><td>A10</td><td>Broadcast events</td><td>Pub/Sub</td></tr>
+                <tr><td>A11</td><td>Data ownership</td><td>No shared DB</td></tr>
+                <tr><td>A12</td><td>Accidental delete</td><td>S3 versioning</td></tr>
+                <tr><td>A13</td><td>HA SQL + replicas</td><td>Amazon Aurora</td></tr>
+                <tr><td>A14</td><td>16k IOPS EBS</td><td>Provisioned IOPS SSD</td></tr>
+                <tr><td>A15</td><td>K8s rolling updates</td><td>Deployment / RollingUpdate strategy</td></tr>
+                <tr><td>A16</td><td>Desired vs current</td><td>kube-controller-manager</td></tr>
+                <tr><td>A17</td><td>Labels/Selectors</td><td>Organize &amp; select objects</td></tr>
+                <tr><td>A18</td><td>Fetch posts</td><td>GET + parse JSON array size</td></tr>
+                <tr><td>B1</td><td>Min cost path</td><td>DP grid: min from top/left</td></tr>
+                <tr><td>B2</td><td>Threads</td><td>Runnable / run / start</td></tr>
+                <tr><td>B3</td><td>Interfaces</td><td>Concrete class must implement all</td></tr>
+                <tr><td>B4</td><td>Structured concurrency</td><td>Lifecycle + cancellation advantages</td></tr>
+                <tr><td>B5</td><td>SQL countries</td><td>GROUP BY + HAVING COUNT &gt; 5</td></tr>
+                <tr><td>B6</td><td>Sort I/O</td><td>Index sort columns</td></tr>
+                <tr><td>B7</td><td>Orders query</td><td>Indexes + avoid SELECT *</td></tr>
+                <tr><td>B8</td><td>Angular form email</td><td>ngModel / FormControl value</td></tr>
+                <tr><td>B9</td><td>toSignal pipeline</td><td>map → distinctUntilChanged → switchMap</td></tr>
+                <tr><td>B10</td><td>Lazy route</td><td>Dynamic import loadChildren/loadComponent</td></tr>
+                <tr><td>B11</td><td>Secret exfil</td><td>Secret scanning + policy controls</td></tr>
+                <tr><td>B12</td><td>Deprecated DTOs</td><td>Examples + ignore legacy context</td></tr>
+                <tr><td>B13</td><td>Vulnerable snippet</td><td>Fix before merge</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        Generated from WhatsApp interview screenshot folders for the
+        java_code_samples_interview repository.
+        Path: <code>docs/whatsapp-interview-questions.html</code>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Karat clinic appointment interview: average duration by type — problem, bugs, and corrected solution">
+    <title>Clinic Appointment Averages — Karat Interview Guide</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.2em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.6em;
+        }
+
+        a { color: var(--accent); }
+
+        .meta {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin: 0.5em 0 1.5em;
+        }
+
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .callout.ok {
+            border-left-color: var(--ok);
+            background: var(--ok-bg);
+        }
+
+        .callout.warn {
+            border-left-color: var(--warn);
+            background: var(--warn-bg);
+        }
+
+        .callout.bad {
+            border-left-color: var(--bad);
+            background: var(--bad-bg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f3f6fa;
+            font-weight: 600;
+        }
+
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+
+        pre code {
+            border: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        .pkg {
+            display: inline-block;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 0.15em 0.7em;
+            font-size: 0.85rem;
+            margin-right: 0.35em;
+        }
+
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+            table { font-size: 0.88rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Clinic Appointment Averages</h1>
+        <p class="meta">
+            Karat-style interview sample &middot;
+            <span class="pkg">problem</span>
+            <code>com.boot2.karat.clinic.problem</code>
+            &nbsp;&middot;&nbsp;
+            <span class="pkg">solution</span>
+            <code>com.boot2.karat.clinic.solution</code>
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#problem">1. Problem statement</a></li>
+            <li><a href="#model">2. Domain model</a></li>
+            <li><a href="#bugs">3. What was wrong in the interview attempt</a></li>
+            <li><a href="#answer">4. Correct solution</a></li>
+            <li><a href="#example">5. Worked example (35.5)</a></li>
+            <li><a href="#packages">6. Packages &amp; how to run</a></li>
+        </ul>
+    </nav>
+
+    <section id="problem">
+        <h2>1. Problem statement</h2>
+        <div class="callout">
+            Build a clinic backend that tracks <strong>doctors</strong> and <strong>appointments</strong>.
+            Implement <code>ClinicManager.getAverageAppointmentDurationByType(int doctorId)</code>
+            so it returns a map of appointment type &rarr; average duration in minutes.
+        </div>
+
+        <h3>Rules</h3>
+        <ul>
+            <li>Count only appointments with status <code>COMPLETED</code>.</li>
+            <li>Ignore <code>SCHEDULED</code>, <code>CANCELLED</code>, and <code>NO_SHOW</code>.</li>
+            <li>Include a type in the map only if that doctor has at least one completed appointment of that type.</li>
+            <li>If the doctor is unknown, or has no completed appointments, return an empty map.</li>
+        </ul>
+
+        <p>
+            A second helper, <code>getAppointmentStatistics()</code>, returns clinic-wide totals:
+            total appointments, completed count, and no-show rate.
+        </p>
+    </section>
+
+    <section id="model">
+        <h2>2. Domain model</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>AppointmentStatus</code></td>
+                    <td><code>SCHEDULED</code>, <code>COMPLETED</code>, <code>CANCELLED</code>, <code>NO_SHOW</code></td>
+                </tr>
+                <tr>
+                    <td><code>AppointmentType</code></td>
+                    <td><code>CONSULTATION</code>, <code>FOLLOWUP</code>, <code>EMERGENCY</code></td>
+                </tr>
+                <tr>
+                    <td><code>Doctor</code></td>
+                    <td><code>doctorId</code>, <code>name</code></td>
+                </tr>
+                <tr>
+                    <td><code>Appointment</code></td>
+                    <td>id, doctor, patient, duration minutes, status, type</td>
+                </tr>
+                <tr>
+                    <td><code>AppointmentStats</code></td>
+                    <td>total, completed, no-show rate</td>
+                </tr>
+                <tr>
+                    <td><code>ClinicManager</code></td>
+                    <td>stores doctors/appointments and computes stats</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="bugs">
+        <h2>3. What was wrong in the interview attempt</h2>
+        <p>
+            The failing run printed <code>counter6</code> / <code>average1.0</code> and then:
+            <strong>Expected 35.5 for CONSULTATION</strong>.
+            That came from several bugs in <code>getAverageAppointmentDurationByType</code>:
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Bug</th>
+                    <th>Effect</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>No filter on <code>doctorId</code></td>
+                    <td>Counts every doctor's completed appointments</td>
+                </tr>
+                <tr>
+                    <td>No filter on <code>appointmentType</code></td>
+                    <td>Same totals reused for CONSULTATION / FOLLOWUP / EMERGENCY</td>
+                </tr>
+                <tr>
+                    <td><code>duration++</code> instead of adding minutes</td>
+                    <td>Duration becomes the count, not the sum of minutes</td>
+                </tr>
+                <tr>
+                    <td>Integer division <code>duration / counter</code></td>
+                    <td>Average collapses to <code>1</code> (then stored as <code>1.0</code>)</td>
+                </tr>
+                <tr>
+                    <td>Always <code>put</code> every type</td>
+                    <td>Map includes types with zero completed visits</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout bad">
+            <strong>Why average became 1.0:</strong>
+            with 6 completed appointments clinic-wide, both <code>counter</code> and
+            <code>duration</code> became 6, so <code>6 / 6 = 1</code>.
+        </div>
+    </section>
+
+    <section id="answer">
+        <h2>4. Correct solution</h2>
+        <div class="callout ok">
+            Filter by doctor + <code>COMPLETED</code>, sum real durations per type,
+            divide with a double cast, and omit empty types.
+        </div>
+
+<pre><code>public Map&lt;AppointmentType, Double&gt; getAverageAppointmentDurationByType(int doctorId) {
+    Map&lt;AppointmentType, Double&gt; averages = new HashMap&lt;&gt;();
+    if (!doctors.containsKey(doctorId)) {
+        return averages;
+    }
+
+    Map&lt;AppointmentType, Integer&gt; totals = new HashMap&lt;&gt;();
+    Map&lt;AppointmentType, Integer&gt; counts = new HashMap&lt;&gt;();
+
+    for (Appointment a : appointments) {
+        if (a.doctorId != doctorId) continue;
+        if (a.status != AppointmentStatus.COMPLETED) continue;
+
+        totals.merge(a.appointmentType, a.durationMinutes, Integer::sum);
+        counts.merge(a.appointmentType, 1, Integer::sum);
+    }
+
+    for (Map.Entry&lt;AppointmentType, Integer&gt; entry : totals.entrySet()) {
+        AppointmentType type = entry.getKey();
+        averages.put(type, (double) entry.getValue() / counts.get(type));
+    }
+    return averages;
+}</code></pre>
+
+        <h3>Also fixed: no-show rate</h3>
+        <p>
+            In the problem version, <code>noShows / total</code> used integer division
+            (<code>1 / 5 = 0</code>). The solution casts:
+            <code>(double) noShows / total</code> &rarr; <code>0.2</code>.
+        </p>
+    </section>
+
+    <section id="example">
+        <h2>5. Worked example (doctor 1 &rarr; 35.5)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Appt</th>
+                    <th>Doctor</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Used?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td><td>1</td><td>30</td><td>COMPLETED</td><td>CONSULTATION</td><td>yes</td>
+                </tr>
+                <tr>
+                    <td>2</td><td>1</td><td>41</td><td>COMPLETED</td><td>CONSULTATION</td><td>yes</td>
+                </tr>
+                <tr>
+                    <td>3</td><td>1</td><td>20</td><td>COMPLETED</td><td>FOLLOWUP</td><td>yes</td>
+                </tr>
+                <tr>
+                    <td>5</td><td>1</td><td>100</td><td>CANCELLED</td><td>CONSULTATION</td><td>no</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>
+            CONSULTATION average = <code>(30 + 41) / 2 = 35.5</code><br>
+            FOLLOWUP average = <code>20 / 1 = 20.0</code><br>
+            EMERGENCY is absent from the map.
+        </p>
+    </section>
+
+    <section id="packages">
+        <h2>6. Packages &amp; how to run</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Package</th>
+                    <th>Contents</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>com.boot2.karat.clinic.problem</code></td>
+                    <td>Interview model + buggy average method (reproduces the failure)</td>
+                </tr>
+                <tr>
+                    <td><code>com.boot2.karat.clinic.solution</code></td>
+                    <td>Corrected <code>ClinicManager</code> + <code>SolutionDemo</code> assertions</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout warn">
+            <strong>Run the solution tests:</strong>
+<pre><code>mvn -q compile
+java -cp target/classes com.boot2.karat.clinic.solution.SolutionDemo</code></pre>
+            Expected console output: <code>All tests pass!</code>
+        </div>
+    </section>
+
+    <footer>
+        Interview sample for this repository. Problem package preserves the buggy approach
+        for study; solution package is the answer to implement in the interview.
+    </footer>
+</body>
+</html>

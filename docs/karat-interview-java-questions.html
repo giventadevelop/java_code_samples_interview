@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Karat interview Java questions: Map keys, effectively final, checked exceptions, generics PECS, and Boolean isTrue null-safety">
+    <title>Karat Interview Java Questions</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.2em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.6em;
+        }
+
+        a { color: var(--accent); }
+
+        .meta {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin: 0.5em 0 1.5em;
+        }
+
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .callout.ok {
+            border-left-color: var(--ok);
+            background: var(--ok-bg);
+        }
+
+        .callout.warn {
+            border-left-color: var(--warn);
+            background: var(--warn-bg);
+        }
+
+        .callout.bad {
+            border-left-color: var(--bad);
+            background: var(--bad-bg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f3f6fa;
+            font-weight: 600;
+        }
+
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+
+        pre code {
+            border: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        ul.tight li { margin: 0.35em 0; }
+
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+            table { font-size: 0.88rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Karat Interview Java Questions</h1>
+        <p class="meta">
+            Interview-ready answers for frequent Java / Spring topics:
+            Map key mutability, effectively final variables, checked exceptions,
+            generics PECS, safe <code>Boolean</code> checks, and
+            BeanFactory vs ApplicationContext.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#map-keys">1. Should a Map key be mutable?</a></li>
+            <li><a href="#effectively-final">2. Effectively final variables</a></li>
+            <li><a href="#checked-exceptions">3. Checked exceptions</a></li>
+            <li><a href="#generics-wildcards">4. Generics: upper vs lower bounded wildcards (PECS)</a></li>
+            <li><a href="#boolean-istrue">5. Fixing <code>isTrue(Boolean)</code> — syntax, logic, and null safety</a></li>
+            <li><a href="#beanfactory-vs-applicationcontext">6. BeanFactory vs ApplicationContext (Spring)</a></li>
+            <li><a href="#summary">7. Quick comparison summary</a></li>
+        </ul>
+    </nav>
+
+    <!-- ============================================================ -->
+    <section id="map-keys">
+        <h2>1. Should a Map key be mutable?</h2>
+
+        <div class="callout bad">
+            <strong>Short answer:</strong> Map keys should be <em>immutable</em> (or treated as immutable
+            after insertion). Mutable keys are allowed by the language, but they are dangerous and
+            usually the wrong design.
+        </div>
+
+        <h3>What “mutable key” means</h3>
+        <p>
+            A key is mutable if fields used by <code>equals()</code> / <code>hashCode()</code> can change
+            after the object is put into a <code>HashMap</code>, <code>HashSet</code>, or similar hash-based
+            collection. Classic risky examples: a custom class with setters on id/name, or using
+            an <code>ArrayList</code> / array as a key and then modifying it.
+        </p>
+
+        <h3>Why mutability breaks HashMap</h3>
+        <p>
+            <code>HashMap</code> places an entry in a bucket based on <code>key.hashCode()</code> at
+            <strong>insert time</strong>. Later lookups use <code>hashCode()</code> again, then
+            <code>equals()</code>, to find the same bucket and entry.
+        </p>
+        <p>
+            If you change the key’s state after insert:
+        </p>
+        <ol>
+            <li>Its <code>hashCode()</code> may change → map looks in a <em>different</em> bucket.</li>
+            <li>The entry is still sitting in the <em>old</em> bucket.</li>
+            <li>Result: <code>get(key)</code> returns <code>null</code>, <code>containsKey</code> is false,
+                and the entry becomes effectively lost (a “ghost” entry) until iteration/removal
+                by identity of the old object.</li>
+        </ol>
+
+<pre><code>class MutableKey {
+    int id;
+    MutableKey(int id) { this.id = id; }
+    public int hashCode() { return id; }
+    public boolean equals(Object o) {
+        return o instanceof MutableKey mk &amp;&amp; mk.id == id;
+    }
+}
+
+Map&lt;MutableKey, String&gt; map = new HashMap&lt;&gt;();
+MutableKey key = new MutableKey(1);
+map.put(key, "A");
+
+key.id = 99;                 // mutated after insert
+System.out.println(map.get(key)); // null — lost!
+</code></pre>
+
+        <h3>Advantages of immutable keys</h3>
+        <table>
+            <thead>
+                <tr><th>Advantage</th><th>Why it matters</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Stable hash location</td>
+                    <td>Entry remains findable for the life of the map</td>
+                </tr>
+                <tr>
+                    <td>Correct <code>equals</code>/<code>hashCode</code> contract</td>
+                    <td>Lookup, replace, and remove behave predictably</td>
+                </tr>
+                <tr>
+                    <td>Thread-safety of key identity</td>
+                    <td>Other threads cannot change “which key” an entry is</td>
+                </tr>
+                <tr>
+                    <td>Simpler reasoning</td>
+                    <td>Key is a value identity, like a primary key in a database</td>
+                </tr>
+                <tr>
+                    <td>Safe use in <code>HashSet</code> / as map keys in caches</td>
+                    <td>Same hashing rules apply to sets</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>When would someone use a mutable object as a key?</h3>
+        <ul class="tight">
+            <li>Almost never as a <em>hash</em> key.</li>
+            <li>Acceptable only if you <strong>never mutate</strong> fields that affect
+                <code>equals</code>/<code>hashCode</code> while the object is in the map
+                (effectively treating it as immutable).</li>
+            <li><code>IdentityHashMap</code> uses reference identity, so field mutation does not
+                move the key — but that is a special-purpose map, not a general recommendation.</li>
+            <li><code>TreeMap</code> with a <code>Comparator</code> that ignores mutable fields can be
+                less fragile, but mutable sort keys are still a design smell.</li>
+        </ul>
+
+        <div class="callout ok">
+            <strong>Best practice:</strong> prefer <code>String</code>, boxed primitives,
+            <code>record</code>s, or other immutable types as keys. If you must use a custom class,
+            make key fields <code>final</code> and do not expose setters that change equality state.
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="effectively-final">
+        <h2>2. Effectively final variables — what, why, advantages</h2>
+
+        <div class="callout">
+            <strong>Definition:</strong> A local variable or parameter is
+            <em>effectively final</em> when its value is never changed after initialization,
+            even if it is not declared with the <code>final</code> keyword.
+        </div>
+
+        <h3>What it means in practice</h3>
+<pre><code>int x = 10;          // effectively final — never reassigned
+Runnable r = () -&gt; System.out.println(x);  // OK
+
+int y = 10;
+y = 11;              // reassigned → NOT effectively final
+Runnable bad = () -&gt; System.out.println(y); // compile error
+</code></pre>
+
+        <p>
+            Java requires that local variables captured by lambdas, anonymous classes, or
+            local classes be <strong>final or effectively final</strong>.
+        </p>
+
+        <h3>Why Java requires this</h3>
+        <ul class="tight">
+            <li>
+                Lambdas/anonymous classes may run later, on another thread, or after the
+                enclosing method returns.
+            </li>
+            <li>
+                Local variables live on the stack frame of the method. When the method ends,
+                that stack frame is gone — so the lambda cannot literally “share” the stack slot.
+            </li>
+            <li>
+                Instead, Java <strong>copies</strong> the value into the lambda/closure instance.
+            </li>
+            <li>
+                If the original local variable could still change, the copy and the original
+                would diverge — confusing and error-prone. Forcing immutability of the captured
+                binding avoids that inconsistency.
+            </li>
+        </ul>
+
+        <div class="callout warn">
+            <strong>Important nuance:</strong> “Effectively final” applies to the
+            <em>variable binding</em>, not deep object immutability.
+            You may mutate fields of an object the variable refers to:
+            <code>list.add("a")</code> is fine if <code>list</code> itself is never reassigned.
+        </div>
+
+        <h3>Advantages of effectively final (and why you should prefer it)</h3>
+        <table>
+            <thead>
+                <tr><th>Advantage</th><th>Explanation</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Enables lambdas / streams / callbacks</td>
+                    <td>Required to compile when a local is used inside a lambda or anonymous class</td>
+                </tr>
+                <tr>
+                    <td>Clearer intent</td>
+                    <td>Readers know this value is a stable snapshot for nested code</td>
+                </tr>
+                <tr>
+                    <td>Fewer accidental bugs</td>
+                    <td>Stops “I changed the local later but the lambda still sees the old copy”</td>
+                </tr>
+                <tr>
+                    <td>Safer concurrent reads of the captured value</td>
+                    <td>The captured copy does not race with later assignments to the local</td>
+                </tr>
+                <tr>
+                    <td>Matches <code>final</code> semantics without ceremony</td>
+                    <td>You get the safety of <code>final</code> without always writing the keyword</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>When should a variable be effectively final?</h3>
+        <ul class="tight">
+            <li><strong>Must:</strong> whenever it is referenced from a lambda, anonymous class,
+                or local class.</li>
+            <li><strong>Should:</strong> for most locals that represent a single computed value
+                (ids, configs, results) — reassignment often signals the variable is doing
+                too many jobs.</li>
+            <li>If you need a mutable counter/flag across a lambda, use an atomic
+                (<code>AtomicInteger</code>), an array of size 1, or redesign with streams/collectors
+                instead of fighting the rule.</li>
+        </ul>
+
+<pre><code>// Good: effectively final capture
+String name = user.getName();
+users.forEach(u -&gt; System.out.println(name + " saw " + u));
+
+// If you need mutation visible across calls, don't capture a changing local:
+AtomicInteger count = new AtomicInteger();
+list.forEach(item -&gt; count.incrementAndGet());
+</code></pre>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="checked-exceptions">
+        <h2>3. Checked exceptions — advantages and disadvantages</h2>
+
+        <h3>What are checked exceptions?</h3>
+        <p>
+            In Java, exceptions under <code>Throwable</code> split into:
+        </p>
+        <ul class="tight">
+            <li><strong>Unchecked:</strong> <code>RuntimeException</code> and <code>Error</code>
+                (and their subclasses). Compiler does not force you to catch or declare them.</li>
+            <li><strong>Checked:</strong> all other <code>Exception</code> subclasses
+                (for example <code>IOException</code>, <code>SQLException</code>, <code>InterruptedException</code>).
+                The compiler <strong>requires</strong> that a method either:
+                <ul>
+                    <li>handle them with <code>try/catch</code>, or</li>
+                    <li>declare them with <code>throws</code>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="callout">
+            <strong>Design intent:</strong> checked exceptions represent recoverable,
+            expected failure modes that callers should consciously handle
+            (file missing, network down, parse failure), as opposed to programming bugs
+            (<code>NullPointerException</code>, <code>IllegalArgumentException</code>).
+        </div>
+
+<pre><code>// Checked: must handle or declare
+public String readFile(Path path) throws IOException {
+    return Files.readString(path);
+}
+
+// Unchecked: compiler does not force handling
+public int parseId(String raw) {
+    return Integer.parseInt(raw); // may throw NumberFormatException
+}
+</code></pre>
+
+        <h3>Advantages of checked exceptions</h3>
+        <table>
+            <thead>
+                <tr><th>Advantage</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compile-time forcing function</td>
+                    <td>Callers cannot silently ignore known failure modes</td>
+                </tr>
+                <tr>
+                    <td>Self-documenting API</td>
+                    <td><code>throws IOException</code> is part of the method contract</td>
+                </tr>
+                <tr>
+                    <td>Encourages recovery paths</td>
+                    <td>Prompts retry, fallback, user message, or cleanup in <code>finally</code>/try-with-resources</td>
+                </tr>
+                <tr>
+                    <td>Clear separation from bugs</td>
+                    <td>Distinguishes “environment/IO went wrong” from “programmer mistake”</td>
+                </tr>
+                <tr>
+                    <td>Safer refactoring of IO-heavy code</td>
+                    <td>Adding a checked throw updates call sites that must adapt</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Disadvantages of checked exceptions</h3>
+        <table>
+            <thead>
+                <tr><th>Disadvantage</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Verbosity / boilerplate</td>
+                    <td>Lots of <code>try/catch</code> or <code>throws</code> cascading up the stack</td>
+                </tr>
+                <tr>
+                    <td>Leaky abstractions</td>
+                    <td>Low-level <code>SQLException</code>/<code>IOException</code> may surface through business APIs</td>
+                </tr>
+                <tr>
+                    <td>Awkward with lambdas / streams</td>
+                    <td>Functional interfaces usually cannot throw checked exceptions cleanly</td>
+                </tr>
+                <tr>
+                    <td>Swallowing temptation</td>
+                    <td>Developers write empty <code>catch</code> blocks just to satisfy the compiler</td>
+                </tr>
+                <tr>
+                    <td>Interface rigidity</td>
+                    <td>Changing checked throws breaks binary/source compatibility of interfaces</td>
+                </tr>
+                <tr>
+                    <td>Not loved by all ecosystems</td>
+                    <td>Many modern libraries prefer unchecked exceptions or Result types</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Practical guidance</h3>
+        <ul class="tight">
+            <li>Use checked exceptions for <strong>recoverable, caller-relevant</strong> failures
+                at API boundaries where handling is realistic.</li>
+            <li>Prefer unchecked exceptions for programming errors and for deep internal layers
+                where every method declaring <code>throws</code> becomes noise.</li>
+            <li>At module boundaries, wrap low-level checked exceptions in a domain exception
+                (checked or unchecked) so callers do not depend on JDBC/IO types.</li>
+            <li>Never empty-catch a checked exception “to make it compile.”
+                Log, translate, or rethrow deliberately.</li>
+        </ul>
+
+<pre><code>// Wrap low-level checked exception at a boundary
+public User loadUser(String id) {
+    try {
+        return repository.find(id);
+    } catch (SQLException e) {
+        throw new DataAccessException("Failed to load user " + id, e);
+    }
+}
+</code></pre>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="generics-wildcards">
+        <h2>4. Generics: upper vs lower bounded wildcards (PECS)</h2>
+
+        <div class="callout">
+            In Java generics, <strong>upper bounded wildcards</strong> restrict an unknown type to
+            a specific type or its subclasses (<code>? extends T</code>), while
+            <strong>lower bounded wildcards</strong> restrict it to a specific type or its
+            superclasses (<code>? super T</code>).
+        </div>
+
+        <h3>Core differences</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Upper bounded wildcard</th>
+                    <th>Lower bounded wildcard</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Syntax</td>
+                    <td><code>&lt;? extends T&gt;</code></td>
+                    <td><code>&lt;? super T&gt;</code></td>
+                </tr>
+                <tr>
+                    <td>Meaning</td>
+                    <td>Any type that is <code>T</code> or a subclass of <code>T</code></td>
+                    <td>Any type that is <code>T</code> or a superclass of <code>T</code></td>
+                </tr>
+                <tr>
+                    <td>Main purpose</td>
+                    <td>Reading data from a structure</td>
+                    <td>Writing data into a structure</td>
+                </tr>
+                <tr>
+                    <td>Design principle</td>
+                    <td>Producer Extends (PE)</td>
+                    <td>Consumer Super (CS)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Upper bounded wildcards (<code>? extends T</code>)</h3>
+        <p>
+            An upper bounded wildcard relaxes the restrictions on a variable by limiting the
+            unknown type to be a specific type or a <em>subclass</em> of that type.
+        </p>
+        <p>
+            <strong>Usage scenario:</strong> use this when you want to <em>read</em> items from a
+            collection, but you do not need to add anything to it. Java guarantees that whatever
+            comes out will be at least of type <code>T</code>.
+        </p>
+
+<pre><code>import java.util.List;
+
+public class UpperBoundExample {
+    // Accepts a List of Number or any of its subclasses (Integer, Double, etc.)
+    public static double sumOfList(List&lt;? extends Number&gt; list) {
+        double sum = 0.0;
+        for (Number n : list) {
+            sum += n.doubleValue(); // Safe to read as Number
+        }
+        return sum;
+    }
+}
+</code></pre>
+
+        <div class="callout warn">
+            <strong>Note:</strong> you cannot add items (except <code>null</code>) to a
+            <code>List&lt;? extends T&gt;</code> because the compiler cannot guarantee which
+            specific subclass the list actually holds
+            (it might be <code>List&lt;Integer&gt;</code> or <code>List&lt;Double&gt;</code>).
+        </div>
+
+        <h3>Lower bounded wildcards (<code>? super T</code>)</h3>
+        <p>
+            A lower bounded wildcard limits the unknown type to be a specific type or a
+            <em>superclass</em> (parent) of that type.
+        </p>
+        <p>
+            <strong>Usage scenario:</strong> use this when you want to <em>write</em> (add) items
+            into a collection. Java guarantees that the collection can safely hold objects of
+            type <code>T</code> (and typically its subclasses as well, via polymorphism).
+        </p>
+
+<pre><code>import java.util.List;
+
+public class LowerBoundExample {
+    // Accepts a List of Integer or any of its superclasses (Number, Object)
+    public static void addIntegers(List&lt;? super Integer&gt; list) {
+        list.add(1); // Safe to write Integer
+        list.add(2);
+    }
+}
+</code></pre>
+
+        <div class="callout warn">
+            <strong>Note:</strong> when reading from a <code>List&lt;? super T&gt;</code>,
+            returned items are typed as <code>Object</code> because the compiler cannot guarantee
+            which specific superclass is being used.
+        </div>
+
+        <h3>The PECS rule</h3>
+        <p>To remember when to use which wildcard, use the <strong>PECS</strong> mnemonic:</p>
+        <ul class="tight">
+            <li><strong>Producer Extends:</strong> if your collection <em>produces</em> data
+                (you only read from it), use <code>&lt;? extends T&gt;</code>.</li>
+            <li><strong>Consumer Super:</strong> if your collection <em>consumes</em> data
+                (you only write to it), use <code>&lt;? super T&gt;</code>.</li>
+        </ul>
+
+        <div class="callout ok">
+            <strong>Interview one-liner:</strong>
+            <code>copy(src, dest)</code> is often declared roughly as
+            <code>copy(List&lt;? extends T&gt; src, List&lt;? super T&gt; dest)</code> —
+            read from a producer (<code>extends</code>), write to a consumer (<code>super</code>).
+        </div>
+
+<pre><code>public static &lt;T&gt; void copy(List&lt;? extends T&gt; src, List&lt;? super T&gt; dest) {
+    for (T item : src) {
+        dest.add(item);
+    }
+}
+</code></pre>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="boolean-istrue">
+        <h2>5. Fixing <code>isTrue(Boolean)</code> — syntax, logic, and null safety</h2>
+
+        <div class="callout warn">
+            <strong>Question:</strong> What is wrong with this method, and how do you fix it?
+        </div>
+
+<pre><code>public boolean isTrue(Boolean input) {
+    if( !input.equals(Boolean.FALSE){   // broken
+        return true;
+    } else {
+        return false;
+    }
+}
+</code></pre>
+
+        <p>
+            Sample code for this topic lives in
+            <code>com.boot2.booleancheck.BooleanIsTrueFix</code>.
+        </p>
+
+        <h3>Plain-English explanation of the bugs</h3>
+        <p>
+            The method is supposed to answer a simple question:
+            <em>“Is this value true?”</em>
+            It takes a boxed <code>Boolean</code> (which can be <code>true</code>,
+            <code>false</code>, or <code>null</code>) and should return a primitive
+            <code>boolean</code> (<code>true</code> or <code>false</code> only).
+        </p>
+
+        <h3>1) Syntax / line-level error (will not compile)</h3>
+        <p>
+            The <code>if</code> is missing a closing parenthesis before the opening brace:
+        </p>
+<pre><code>if (!input.equals(Boolean.FALSE){     // wrong
+if (!input.equals(Boolean.FALSE)) {   // correct
+</code></pre>
+        <p>
+            Until that parenthesis is fixed, Java will not compile the class at all.
+        </p>
+
+        <h3>2) Logical / runtime error — null crashes the method</h3>
+        <p>
+            Even after fixing the parenthesis, this line is unsafe:
+        </p>
+<pre><code>input.equals(Boolean.FALSE)
+</code></pre>
+        <p>
+            That calls a method <em>on</em> <code>input</code>. If someone passes
+            <code>null</code>, there is no object to call <code>equals</code> on, so you get a
+            <code>NullPointerException</code>. A method that promises to return
+            <code>boolean</code> should not blow up on a missing value.
+        </p>
+
+        <h3>3) Logical confusion — “not false” is not the same as “is true”</h3>
+        <p>
+            The broken code asks: “Is this value <em>not</em> false?”
+            That is different from “Is this value <em>true</em>?”
+        </p>
+        <ul class="tight">
+            <li>For <code>Boolean.TRUE</code> and <code>Boolean.FALSE</code>, the answers happen to line up.</li>
+            <li>For <code>null</code>, “not false” is philosophically fuzzy — and if you tried a
+                null-safe version of “not equals false,” <code>null</code> could be treated as true.
+                Usually, “is true?” should answer <strong>false</strong> when the value is missing.</li>
+        </ul>
+
+        <h3>4) Style / clarity problem</h3>
+        <p>
+            Writing <code>if (...) return true; else return false;</code> is longer than needed.
+            The condition itself already <em>is</em> the answer. Prefer returning the boolean
+            expression directly.
+        </p>
+
+        <h3>Correct solution (plain English)</h3>
+        <div class="callout ok">
+            Ask the constant whether it equals the input:
+            <code>Boolean.TRUE.equals(input)</code>.
+            You never call a method on a possibly-null <code>input</code>, so
+            <code>null</code> is safe and returns <code>false</code>.
+            Only an actual <code>Boolean.TRUE</code> returns <code>true</code>.
+        </div>
+
+<pre><code>public boolean isTrue(Boolean input) {
+    // Call equals on the constant, not on input → null-safe
+    return Boolean.TRUE.equals(input);
+}
+</code></pre>
+
+        <h3>Expected results</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Input</th>
+                    <th>Correct <code>isTrue</code></th>
+                    <th>Broken version</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Boolean.TRUE</code></td>
+                    <td><code>true</code></td>
+                    <td><code>true</code> (after syntax fix)</td>
+                </tr>
+                <tr>
+                    <td><code>Boolean.FALSE</code></td>
+                    <td><code>false</code></td>
+                    <td><code>false</code> (after syntax fix)</td>
+                </tr>
+                <tr>
+                    <td><code>null</code></td>
+                    <td><code>false</code></td>
+                    <td><code>NullPointerException</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Never call <code>equals</code> on a possibly-null boxed value.
+            Use <code>Boolean.TRUE.equals(input)</code> so null is safe and only true means true.
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="beanfactory-vs-applicationcontext">
+        <h2>6. BeanFactory vs ApplicationContext (Spring / Spring Boot)</h2>
+
+        <div class="callout warn">
+            <strong>Question:</strong> What is the difference between a
+            <code>BeanFactory</code> and an <code>ApplicationContext</code> in Spring Boot?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            <code>BeanFactory</code> is the basic IoC container (get beans / wire dependencies).
+            <code>ApplicationContext</code> <em>extends</em> <code>BeanFactory</code> and adds
+            enterprise features: events, i18n, AOP integration, resource loading, Environment,
+            and eager singleton startup. In Spring Boot you almost always work with an
+            <code>ApplicationContext</code> (for example <code>SpringApplication.run(...)</code>).
+        </div>
+
+        <h3>What is BeanFactory?</h3>
+        <p>
+            <code>org.springframework.beans.factory.BeanFactory</code> is the root interface
+            for accessing the Spring bean container. It knows how to:
+        </p>
+        <ul class="tight">
+            <li>Instantiate beans</li>
+            <li>Wire dependencies (DI)</li>
+            <li>Look up beans by name/type (<code>getBean(...)</code>)</li>
+        </ul>
+        <p>
+            Classic implementations include <code>DefaultListableBeanFactory</code> /
+            <code>XmlBeanFactory</code> (legacy). A plain <code>BeanFactory</code> is often
+            described as <strong>lazy</strong>: singleton beans are typically created when first
+            requested (unless configured otherwise).
+        </p>
+
+        <h3>What is ApplicationContext?</h3>
+        <p>
+            <code>org.springframework.context.ApplicationContext</code> is a
+            <strong>sub-interface of BeanFactory</strong>. Everything BeanFactory can do,
+            ApplicationContext can do — plus application-level services.
+        </p>
+        <p>
+            Common Spring Boot types: <code>AnnotationConfigApplicationContext</code>,
+            <code>AnnotationConfigServletWebServerApplicationContext</code>,
+            <code>GenericWebApplicationContext</code>, etc. Boot’s
+            <code>SpringApplication.run</code> returns an <code>ConfigurableApplicationContext</code>.
+        </p>
+
+        <h3>Core differences</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th><code>BeanFactory</code></th>
+                    <th><code>ApplicationContext</code></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Role</td>
+                    <td>Basic IoC / DI container</td>
+                    <td>Full application container (IoC + extras)</td>
+                </tr>
+                <tr>
+                    <td>Inheritance</td>
+                    <td>Root bean container interface</td>
+                    <td>Extends <code>BeanFactory</code> (and other interfaces)</td>
+                </tr>
+                <tr>
+                    <td>Bean creation (typical)</td>
+                    <td>More lazy — create on first <code>getBean</code></td>
+                    <td>Eagerly instantiates singleton beans at startup (fail-fast)</td>
+                </tr>
+                <tr>
+                    <td>Internationalization (i18n)</td>
+                    <td>Not built-in</td>
+                    <td>MessageSource support</td>
+                </tr>
+                <tr>
+                    <td>Event publishing</td>
+                    <td>No</td>
+                    <td>Yes — <code>ApplicationEventPublisher</code> /
+                        <code>@EventListener</code></td>
+                </tr>
+                <tr>
+                    <td>AOP / proxies</td>
+                    <td>Possible but limited convenience</td>
+                    <td>Integrated AOP (transactions, security proxies, etc.)</td>
+                </tr>
+                <tr>
+                    <td>Resource access</td>
+                    <td>Basic</td>
+                    <td><code>ResourceLoader</code> / <code>ResourcePatternResolver</code>
+                        (classpath*, file:, etc.)</td>
+                </tr>
+                <tr>
+                    <td>Environment / profiles</td>
+                    <td>Limited</td>
+                    <td><code>Environment</code>, <code>@Profile</code>, property sources</td>
+                </tr>
+                <tr>
+                    <td>Auto-registration of beans</td>
+                    <td>Manual / lower-level</td>
+                    <td>Post-processors, component scan, Boot auto-config</td>
+                </tr>
+                <tr>
+                    <td>Spring Boot usage</td>
+                    <td>Rarely used directly by app code</td>
+                    <td>Default — what Boot starts and injects</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Spring Boot angle</h3>
+        <ul class="tight">
+            <li>You do <strong>not</strong> normally create a raw <code>BeanFactory</code> in a Boot app.</li>
+            <li><code>@SpringBootApplication</code> + <code>SpringApplication.run</code> builds an
+                <code>ApplicationContext</code>, runs auto-configuration, and registers beans.</li>
+            <li>Inject <code>ApplicationContext</code> (or specific collaborators) if you need
+                programmatic lookups/events — prefer constructor injection of your own beans first.</li>
+            <li>Internally, every <code>ApplicationContext</code> still uses a
+                <code>BeanFactory</code> underneath (often accessible via
+                <code>getBeanFactory()</code> on configurable contexts).</li>
+        </ul>
+
+<pre><code>@SpringBootApplication
+public class DemoApplication {
+    public static void main(String[] args) {
+        // Returns ApplicationContext (which IS-A BeanFactory)
+        var ctx = SpringApplication.run(DemoApplication.class, args);
+        MyService service = ctx.getBean(MyService.class);
+    }
+}
+</code></pre>
+
+        <h3>When would you talk about BeanFactory in an interview?</h3>
+        <ul class="tight">
+            <li>To show you know ApplicationContext is a richer container built on BeanFactory.</li>
+            <li>Memory-sensitive or special low-level tooling might use BeanFactory alone
+                (uncommon in modern Boot apps).</li>
+            <li>Understanding startup: ApplicationContext eager singletons catch config errors early;
+                BeanFactory laziness can defer cost/errors until first use.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            BeanFactory = basic DI container; ApplicationContext = BeanFactory + events, i18n,
+            resources, Environment, AOP integration, and eager singleton startup — what Spring Boot
+            actually runs.
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section id="summary">
+        <h2>7. Quick comparison summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>Rule of thumb</th>
+                    <th>Main payoff</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Map keys</td>
+                    <td>Keep keys immutable after insert</td>
+                    <td>Lookups keep working; no lost entries</td>
+                </tr>
+                <tr>
+                    <td>Effectively final</td>
+                    <td>Do not reassign locals captured by lambdas</td>
+                    <td>Safe, consistent closures; required by compiler</td>
+                </tr>
+                <tr>
+                    <td>Checked exceptions</td>
+                    <td>Use for expected recoverable failures; avoid ceremony spam</td>
+                    <td>Forced handling vs. verbosity / lambda friction</td>
+                </tr>
+                <tr>
+                    <td>Generics wildcards</td>
+                    <td>PECS: producer <code>extends</code>, consumer <code>super</code></td>
+                    <td>Safe read/write APIs without over-constraining callers</td>
+                </tr>
+                <tr>
+                    <td><code>isTrue(Boolean)</code></td>
+                    <td>Use <code>Boolean.TRUE.equals(input)</code></td>
+                    <td>Null-safe; true only when value is actually true</td>
+                </tr>
+                <tr>
+                    <td>BeanFactory vs ApplicationContext</td>
+                    <td>Use ApplicationContext (Boot default); BeanFactory is the core DI SPI</td>
+                    <td>Events, i18n, AOP, Environment, fail-fast startup</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout ok">
+            Interview one-liners:
+            <ul class="tight">
+                <li><strong>Mutable map key:</strong> changing <code>hashCode</code>/<code>equals</code> state
+                    after <code>put</code> loses the entry.</li>
+                <li><strong>Effectively final:</strong> assigned once; required so lambdas capture a
+                    stable copy of the local.</li>
+                <li><strong>Checked exception:</strong> compiler-enforced recoverable failure;
+                    great for contracts, costly in boilerplate and streams.</li>
+                <li><strong>PECS:</strong> <code>? extends T</code> to read (producer);
+                    <code>? super T</code> to write (consumer).</li>
+                <li><strong>Boolean check:</strong> <code>Boolean.TRUE.equals(input)</code> —
+                    never call <code>equals</code> on a null boxed Boolean.</li>
+                <li><strong>BeanFactory vs ApplicationContext:</strong> ApplicationContext extends
+                    BeanFactory with app services; Spring Boot runs an ApplicationContext.</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        Documentation for the java_code_samples_interview repository.
+        Open this file in a browser for readable formatting.
+        Path: <code>docs/karat-interview-java-questions.html</code>
+    </footer>
+</body>
+</html>
