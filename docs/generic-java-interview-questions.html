@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Generic Java interview questions: ExecutorService thread pools, synchronized vs ReentrantLock, concurrency locking">
+    <meta name="description" content="Generic Java interview questions: ExecutorService, synchronized, CompletableFuture, CloudFormation vs Terraform, garbage collection">
     <title>Generic Java Interview Questions</title>
     <style>
         :root {
@@ -172,8 +172,9 @@
     <header>
         <h1>Generic Java Interview Questions</h1>
         <p class="meta">
-            General Java concurrency interview Q&amp;A: ExecutorService pools,
-            <code>synchronized</code>, and <code>ReentrantLock</code>.
+            General Java concurrency and cloud interview Q&amp;A: ExecutorService pools,
+            <code>synchronized</code>, <code>ReentrantLock</code>,
+            <code>CompletableFuture</code>, CloudFormation vs Terraform, and garbage collection.
             Related: <a href="karat-interview-java-questions.html">Karat Interview Java Questions</a>.
         </p>
     </header>
@@ -183,7 +184,10 @@
         <ul>
             <li><a href="#thread-pool-limits">1. Thread pools / cached thread pools — infinite tasks or threads?</a></li>
             <li><a href="#synchronized-vs-reentrantlock">2. <code>synchronized</code> vs manual locking with <code>ReentrantLock</code></a></li>
-            <li><a href="#summary">3. Quick summary</a></li>
+            <li><a href="#completable-future">3. <code>CompletableFuture</code> and asynchronous processing</a></li>
+            <li><a href="#cloudformation-vs-terraform">4. AWS CloudFormation vs Terraform</a></li>
+            <li><a href="#garbage-collection">5. Garbage collection — advanced features &amp; interview Q&amp;A</a></li>
+            <li><a href="#summary">6. Quick summary</a></li>
         </ul>
     </nav>
 
@@ -508,8 +512,325 @@ if (lock.tryLock(200, TimeUnit.MILLISECONDS)) {
         </div>
     </section>
 
+    <section id="completable-future">
+        <h2>3. <code>CompletableFuture</code> and asynchronous processing</h2>
+
+        <div class="question">
+            Question: What is <code>CompletableFuture</code>, and how do you use it for
+            asynchronous processing in Java interviews?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            <code>CompletableFuture</code> is a Java 8+ implementation of
+            <code>Future</code> that supports non-blocking callbacks, chaining, combining
+            multiple async tasks, and explicit completion. Prefer it over raw
+            <code>Future.get()</code> blocking when you need pipeline-style async work.
+        </div>
+
+        <h3>Interview bullet points</h3>
+        <ul class="tight">
+            <li><strong>What it is:</strong> a promise-like result that may complete later with
+                a value or an exception; you can attach callbacks instead of blocking a thread.</li>
+            <li><strong>Start async work:</strong>
+                <code>CompletableFuture.supplyAsync(() -&gt; fetch())</code> (returns a value) or
+                <code>runAsync(() -&gt; sideEffect())</code> (no return value).
+                Default executor is <code>ForkJoinPool.commonPool()</code>; pass a custom
+                <code>Executor</code> for production control.</li>
+            <li><strong>Chain (thenApply / thenCompose):</strong>
+                <code>thenApply</code> transforms the result (like map);
+                <code>thenCompose</code> flattens another <code>CompletableFuture</code> (like flatMap)
+                — use compose when the next step is itself async.</li>
+            <li><strong>Side effects:</strong> <code>thenAccept</code> consumes the result;
+                <code>thenRun</code> runs when done without using the value.</li>
+            <li><strong>Combine independent tasks:</strong>
+                <code>thenCombine(other, (a, b) -&gt; merge)</code> waits for both;
+                <code>allOf(cf1, cf2, …)</code> waits for all;
+                <code>anyOf(...)</code> completes when the first finishes.</li>
+            <li><strong>Error handling:</strong> <code>exceptionally</code>,
+                <code>handle</code>, or <code>whenComplete</code> — recover or log without
+                burying checked exceptions in caller stacks.</li>
+            <li><strong>Async vs sync stages:</strong> <code>thenApply</code> runs on the completing
+                thread (or caller); <code>thenApplyAsync</code> schedules on an executor — important
+                so you do not block I/O threads with heavy CPU work.</li>
+            <li><strong>Timeouts (Java 9+):</strong> <code>orTimeout</code> /
+                <code>completeOnTimeout</code> to fail or fall back if work runs too long.</li>
+            <li><strong>vs <code>Future</code>:</strong> classic <code>Future</code> is mostly
+                “submit and block on get”; <code>CompletableFuture</code> supports composition
+                and non-blocking pipelines.</li>
+            <li><strong>vs reactive (WebFlux / RxJava):</strong> CF is great for a handful of
+                async calls; streams of many events usually fit reactive APIs better.</li>
+            <li><strong>Pitfalls:</strong> forgetting a custom executor; calling blocking
+                <code>get()</code>/<code>join()</code> on request threads; swallowing exceptions;
+                creating unbounded work on <code>commonPool()</code>.</li>
+        </ul>
+
+<pre><code>ExecutorService pool = Executors.newFixedThreadPool(8);
+
+CompletableFuture&lt;User&gt; user =
+        CompletableFuture.supplyAsync(() -&gt; userClient.get(id), pool);
+CompletableFuture&lt;Orders&gt; orders =
+        CompletableFuture.supplyAsync(() -&gt; orderClient.list(id), pool);
+
+CompletableFuture&lt;Dashboard&gt; dashboard = user.thenCombine(orders,
+        (u, o) -&gt; new Dashboard(u, o));
+
+Dashboard result = dashboard
+        .orTimeout(2, TimeUnit.SECONDS)
+        .exceptionally(ex -&gt; Dashboard.empty())
+        .join(); // join = unchecked; prefer at the edge, not deep in library code
+</code></pre>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Use <code>supplyAsync</code> + <code>thenCompose</code>/<code>thenCombine</code>/<code>allOf</code>
+            for async pipelines; always name your executor in production and handle failures with
+            <code>exceptionally</code>/<code>handle</code>.
+        </div>
+    </section>
+
+    <section id="cloudformation-vs-terraform">
+        <h2>4. AWS CloudFormation vs Terraform</h2>
+
+        <div class="question">
+            Question: What is the difference between AWS CloudFormation and Terraform?
+            When would you choose each?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            Both are Infrastructure as Code (IaC). CloudFormation is AWS-native JSON/YAML
+            (or CDK) tightly integrated with AWS. Terraform is HashiCorp’s multi-cloud tool
+            (HCL) with a large provider ecosystem. Choose CFN for deep AWS-only stacks;
+            Terraform when you need multi-cloud, multi-vendor, or a single workflow across AWS + others.
+        </div>
+
+        <h3>Interview bullet points</h3>
+        <ul class="tight">
+            <li><strong>CloudFormation:</strong> AWS service; templates declare resources; AWS
+                manages create/update/delete as a <em>stack</em>; free to use (pay for resources).</li>
+            <li><strong>Terraform:</strong> open-source / Terraform Cloud; providers for AWS, Azure,
+                GCP, SaaS (Datadog, GitHub, etc.); state file tracks real-world resources.</li>
+            <li><strong>Language:</strong> CFN = YAML/JSON (or CDK in TypeScript/Java/Python);
+                Terraform = HCL (or CDKTF).</li>
+            <li><strong>State:</strong> CFN state lives in AWS (stack events/resources);
+                Terraform uses a state file (local or remote backend like S3 + DynamoDB lock) —
+                state security and locking are interview hot topics.</li>
+            <li><strong>Drift:</strong> both can detect drift; CFN has drift detection on stacks;
+                Terraform <code>plan</code> compares config to state/reality.</li>
+            <li><strong>Modules / reuse:</strong> Terraform modules are a first-class strength;
+                CFN has nested stacks / modules; CDK improves reuse for CFN users.</li>
+            <li><strong>Rollbacks:</strong> CFN stack updates can roll back automatically on failure;
+                Terraform applies are more “forward”; you design careful plans and sometimes
+                targeted destroys/recreates.</li>
+            <li><strong>New AWS features:</strong> CFN often gets official support quickly as an
+                AWS product; Terraform AWS provider may lag slightly until the provider updates.</li>
+            <li><strong>IAM / security:</strong> both need least-privilege deploy roles;
+                Terraform state can contain secrets — encrypt and lock remote state.</li>
+            <li><strong>Team fit:</strong> all-in on AWS + org standards around stacks → CFN/CDK;
+                platform team managing AWS + Cloudflare + Datadog + k8s → Terraform is common.</li>
+        </ul>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>CloudFormation</th>
+                    <th>Terraform</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cloud scope</td>
+                    <td>AWS only (native)</td>
+                    <td>Multi-cloud / multi-provider</td>
+                </tr>
+                <tr>
+                    <td>Config language</td>
+                    <td>YAML / JSON / CDK</td>
+                    <td>HCL / CDKTF</td>
+                </tr>
+                <tr>
+                    <td>State</td>
+                    <td>Managed by AWS stacks</td>
+                    <td>State file + backends / locking</td>
+                </tr>
+                <tr>
+                    <td>Change preview</td>
+                    <td>Change sets</td>
+                    <td><code>terraform plan</code></td>
+                </tr>
+                <tr>
+                    <td>Best when</td>
+                    <td>Deep AWS integration, StackSets, Guard/Control Tower</td>
+                    <td>Mixed vendors, reusable modules, one IaC tool</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            CloudFormation = AWS-native stacks; Terraform = multi-cloud IaC with explicit state.
+            Same goal (declarative infra), different ecosystem and operational model.
+        </div>
+    </section>
+
+    <section id="garbage-collection">
+        <h2>5. Garbage collection — advanced features &amp; interview Q&amp;A</h2>
+
+        <div class="question">
+            Question: What should you know about Java garbage collection for senior interviews —
+            heap layout, collectors, pauses, and how you would tune or diagnose GC?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            GC automatically reclaims unreachable objects. Modern JVMs use generational
+            (and sometimes regional) heaps with collectors like G1 (default in recent JDKs),
+            ZGC, and Shenandoah aimed at low pause times. Interviews expect heap regions,
+            stop-the-world vs concurrent work, and how you read GC logs / metrics.
+        </div>
+
+        <h3>Advanced GC feature bullets</h3>
+        <ul class="tight">
+            <li><strong>Generational hypothesis:</strong> most objects die young → young gen
+                (Eden + Survivor) collected often and cheaply; long-lived objects promote to old gen.</li>
+            <li><strong>Minor vs major / full GC:</strong> young collections are frequent;
+                old-gen / full collections are rarer and historically more expensive (STW).</li>
+            <li><strong>Stop-the-world (STW) vs concurrent:</strong> STW pauses all app threads;
+                concurrent collectors do marking/relocation alongside mutators to shrink pauses.</li>
+            <li><strong>G1 GC (Garbage-First):</strong> heap split into equal-sized regions;
+                prioritizes regions with most garbage; soft real-time pause goal via
+                <code>-XX:MaxGCPauseMillis</code>; default on many modern JDKs.</li>
+            <li><strong>ZGC / Shenandoah:</strong> ultra-low-pause collectors (often sub-ms to low-ms
+                class goals) using colored pointers / concurrent compaction — strong for large heaps
+                and latency-sensitive services.</li>
+            <li><strong>Parallel / Throughput collectors:</strong> maximize throughput with parallel
+                STW workers; less ideal when tail latency matters.</li>
+            <li><strong>CMS (historical):</strong> concurrent mark-sweep for old gen; deprecated/removed
+                in newer JDKs — know it for legacy apps, prefer G1/ZGC now.</li>
+            <li><strong>Humongous objects (G1):</strong> objects larger than ~½ region size use
+                contiguous humongous regions; can cause fragmentation / more frequent full GCs if abused.</li>
+            <li><strong>String deduplication / compressed oops:</strong> memory-footprint optimizations
+                (flags vary by JDK) that interviewers may mention for large heaps.</li>
+            <li><strong>GC roots:</strong> stack locals, static fields, JNI refs, etc. — anything
+                reachable from roots is live.</li>
+            <li><strong>Soft / weak / phantom references:</strong> soft ≈ caches; weak ≈ canonical maps;
+                phantom ≈ post-mortem cleanup / cleaner patterns (prefer <code>Cleaner</code> over
+                finalizers).</li>
+            <li><strong>Escape analysis / TLAB / allocation:</strong> JVM may scalar-replace or
+                stack-allocate short-lived objects; thread-local allocation buffers speed young alloc.</li>
+            <li><strong>GC logging &amp; observability:</strong> unified logging
+                (<code>-Xlog:gc*</code>), JFR, GC metrics in APM — diagnose pause spikes, allocation rate,
+                promotion failures, heap fragmentation.</li>
+            <li><strong>Tuning levers:</strong> heap size (<code>-Xms/-Xmx</code>), pause goals,
+                region size, concurrent threads; fix allocation churn / leaks before “random flag tweaking.”</li>
+        </ul>
+
+        <h3>Common interview questions (with crisp answers)</h3>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">How does the JVM know an object can be collected?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                If it is not reachable from GC roots through any reference chain
+                (ignoring special reference types’ semantics), it is eligible for collection.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">Young vs old generation — why split the heap?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                Most objects die quickly. Collecting a small young space often is cheaper than
+                scanning the whole heap every time; survivors promote to old gen.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">G1 vs ZGC — when would you pick each?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                <strong>G1:</strong> solid default for many server apps; balance of throughput and
+                predictable pauses. <strong>ZGC/Shenandoah:</strong> when you need very low latency
+                on large heaps and can run a supported JDK build.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">What causes frequent full GCs or long pauses?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                High allocation rate, memory leaks / retained caches, heap too small, promotion
+                failure, fragmentation (incl. humongous allocations), finalizer/cleaner backlogs,
+                or wrong collector for the latency SLO.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">Does <code>System.gc()</code> force a full collection?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                It only <em>suggests</em> a GC (unless disabled via flags). Relying on it in
+                production is a smell; prefer fixing allocation patterns and sizing.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">How do you investigate a suspected memory leak?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                Watch old-gen occupancy trend up across GCs; take a heap dump
+                (jcmd / jmap / container tooling); analyze retained Dominator trees
+                (MAT / VisualVM); check caches, ThreadLocals, listeners, static maps.
+            </div>
+        </div>
+
+        <div class="qa" style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:1em 0;background:#fafbfc;">
+            <div class="question" style="margin-top:0;">WeakHashMap vs a normal HashMap for a cache?</div>
+            <div class="callout ok" style="margin-bottom:0;">
+                <code>WeakHashMap</code> uses weak keys — entries can disappear after GC when keys
+                are otherwise unreachable. Useful for canonical mappings; for size-bounded caches
+                prefer explicit policies (Caffeine / Guava) over hoping GC cleans up SoftReferences.
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Collector</th>
+                    <th>Focus</th>
+                    <th>Interview note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Serial</td>
+                    <td>Single-threaded STW</td>
+                    <td>Small heaps / client / containers with tiny CPU</td>
+                </tr>
+                <tr>
+                    <td>Parallel</td>
+                    <td>Throughput</td>
+                    <td>Batch jobs; longer pauses OK</td>
+                </tr>
+                <tr>
+                    <td>G1</td>
+                    <td>Balanced / region-based</td>
+                    <td>Common server default; pause-goal oriented</td>
+                </tr>
+                <tr>
+                    <td>ZGC / Shenandoah</td>
+                    <td>Ultra-low latency</td>
+                    <td>Large heaps, latency SLOs</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Explain reachability + generations, name G1 as the usual default, know ZGC for
+            low-pause large heaps, and diagnose with allocation rate, GC logs, and heap dumps —
+            not random <code>-XX</code> flags first.
+        </div>
+    </section>
+
     <section id="summary">
-        <h2>3. Quick summary</h2>
+        <h2>6. Quick summary</h2>
         <table>
             <thead>
                 <tr>
@@ -533,6 +854,18 @@ if (lock.tryLock(200, TimeUnit.MILLISECONDS)) {
                 <tr>
                     <td><code>synchronized</code> vs <code>ReentrantLock</code></td>
                     <td>Use synchronized for simple cases; ReentrantLock when you need tryLock, timeout, fairness, or Conditions</td>
+                </tr>
+                <tr>
+                    <td><code>CompletableFuture</code></td>
+                    <td>Compose async with supplyAsync / thenCompose / allOf; use a named executor</td>
+                </tr>
+                <tr>
+                    <td>CloudFormation vs Terraform</td>
+                    <td>CFN for AWS-native stacks; Terraform for multi-cloud and shared modules</td>
+                </tr>
+                <tr>
+                    <td>Garbage collection</td>
+                    <td>G1 default for many servers; ZGC for ultra-low pause; fix leaks/churn before exotic flags</td>
                 </tr>
             </tbody>
         </table>

@@ -15,6 +15,10 @@ import java.util.concurrent.TimeUnit;
  * <p>Earlier versions of this class used a plain {@code ArrayList} plus
  * {@code synchronized} methods. That was not a true blocking queue: {@code get}
  * did not wait for data, and {@code put} did not wait for capacity.</p>
+ *
+ * <p>Interview walkthrough (wait/notify vs ArrayBlockingQueue put/take):
+ * <a href="https://www.youtube.com/watch?v=ITPesAZFvWI">JavaTechie Producer Consumer</a>
+ * — also see {@link com.boot2.producerconsumer.ProducerConsumerUsingBlockingQueue}.</p>
  */
 public class BlockingQueue {
 
