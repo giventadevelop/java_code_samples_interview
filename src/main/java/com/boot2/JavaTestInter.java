@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static java.util.Arrays.stream;
 
@@ -100,11 +102,11 @@ public class JavaTestInter {
 
         for (int i = 0; i < 5; i++) {
             int deptId = random.nextInt(1000) + 1;
-            // Generate a random department id between 1 and 1000
-            double salary = 50000 + random.nextDouble() * 50000;
-            // Generate a random salary between 50000 and 100000
-            employees.add(new Employee("John", "Doe",deptId, salary));
-            employees.add(new Employee("Joe", "Smith",deptId, salary));
+            // Generate a random salary between 50000 and 100000 as BigDecimal (exact money type)
+            BigDecimal salary = BigDecimal.valueOf(50_000 + random.nextDouble() * 50_000)
+                    .setScale(2, RoundingMode.HALF_UP);
+            employees.add(new Employee("John", "Doe", deptId, salary));
+            employees.add(new Employee("Joe", "Smith", deptId, salary));
         }
         Optional<Employee> employeeOptional = Optional.ofNullable(null);
         // prints employeeOptional Optional.empty if null with ofNullable
@@ -139,7 +141,7 @@ public class JavaTestInter {
                         Collectors.reducing(BinaryOperator.maxBy(Comparator.comparing(Employee::getSalary)))));
 
         // get the top salary from Optional  from a sorted map combined in one single statement iter entryset
-        Map<Integer, Double> topSalaryEmployeeSalaryDoubleVal =  employees.stream()
+        Map<Integer, BigDecimal> topSalaryEmployeeSalaryDoubleVal =  employees.stream()
                 .collect(Collectors.groupingBy(Employee::getDeptId,
                       Collectors.reducing(BinaryOperator.maxBy(Comparator.comparing(Employee::getSalary)))))
                 .entrySet().stream()
@@ -149,11 +151,11 @@ public class JavaTestInter {
 
         // get the top salary from Optional  from a sorted map
 
-        Map<Integer, Double> topSalaryEmployeeSalary =  topSalaryEmployees.entrySet().stream()
+        Map<Integer, BigDecimal> topSalaryEmployeeSalary =  topSalaryEmployees.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().get().getSalary()));
 
         // same code as above with a fix to the get method warning
-        Map<Integer, Double> topSalaryEmployeeSalaryFix = topSalaryEmployees.entrySet().stream()
+        Map<Integer, BigDecimal> topSalaryEmployeeSalaryFix = topSalaryEmployees.entrySet().stream()
                 .filter(e -> e.getValue().isPresent())
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -164,10 +166,10 @@ public class JavaTestInter {
         Map<Integer, java.util.Optional<Employee>> mapMaxSalByDept = employees.stream()
                 .collect(Collectors.groupingBy(
                 Employee::getDeptId, Collectors.reducing (BinaryOperator.maxBy(Comparator.comparing (Employee::getSalary)))));
-        Map<Integer,Double> mapMaxSalByDeptDble = employees.stream().
+        Map<Integer, BigDecimal> mapMaxSalByDeptDble = employees.stream().
                 collect(Collectors.groupingBy
                 (Employee::getDeptId,
-                  Collectors.collectingAndThen(Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary)),emp -> emp.get().getSalary())));
+                  Collectors.collectingAndThen(Collectors.maxBy(Comparator.comparing(Employee::getSalary)),emp -> emp.get().getSalary())));
         // printing each entry value of the map's entry set  with dept_id and highest salary
         System.out.println(" printing each entry value of the map's entry set  with dept_id and highest salary");
         mapMaxSalByDeptDble.entrySet().forEach(System.out::println);
@@ -188,7 +190,7 @@ public class JavaTestInter {
         Map<Integer,Employee> mapMaxSalByDeptEmpl= employees.stream().
                 collect(Collectors.groupingBy
                         (Employee::getDeptId,
-                           Collectors.collectingAndThen(Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary)),emp -> emp.get())));
+                           Collectors.collectingAndThen(Collectors.maxBy(Comparator.comparing(Employee::getSalary)),emp -> emp.get())));
 
 
                                 /* Map<String, Employee map1 empList.stream().

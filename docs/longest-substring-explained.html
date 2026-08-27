@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Longest substring without repeating characters — sliding window explained with diagrams">
+    <title>Longest Substring Without Duplicates — Explained</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+            --window: #cce5ff;
+            --window-border: #0066cc;
+            --dup: #ffd6d6;
+            --left-color: #1b7a3d;
+            --right-color: #b35c00;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.4em;
+        }
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.8em;
+        }
+        a { color: var(--accent); }
+        .meta { color: var(--muted); font-size: 0.95rem; margin: 0.5em 0 1.5em; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+        .callout.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+        .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 0.8em;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: #f3f6fa; font-weight: 600; }
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { border: 0; padding: 0; background: transparent; }
+        ul.tight li { margin: 0.35em 0; }
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- Sliding-window diagrams --- */
+        .diagram {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px 18px;
+            margin: 1.2em 0;
+            background: #fafbfc;
+            overflow-x: auto;
+        }
+        .diagram-title {
+            font-weight: 600;
+            margin: 0 0 0.6em;
+            font-size: 0.95rem;
+        }
+        .diagram-note {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 0.55em 0 0;
+        }
+        .cells {
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+            margin: 0.4em 0 0.2em;
+        }
+        .cell {
+            width: 48px;
+            text-align: center;
+        }
+        .cell .ch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 48px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            background: #fff;
+        }
+        .cell .idx {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .cell.in-window .ch {
+            background: var(--window);
+            border-color: var(--window-border);
+        }
+        .cell.dup .ch {
+            background: var(--dup);
+            border-color: var(--bad);
+        }
+        .cell.left-ptr .ch { box-shadow: 0 0 0 2px var(--left-color); }
+        .cell.right-ptr .ch { box-shadow: 0 0 0 2px var(--right-color); }
+        .cell.left-ptr.right-ptr .ch {
+            box-shadow: 0 0 0 2px var(--left-color), 0 0 0 4px var(--right-color);
+        }
+        .ptr-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 2px;
+            min-height: 1.4em;
+        }
+        .ptr-row .cell {
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .ptr-l { color: var(--left-color); }
+        .ptr-r { color: var(--right-color); }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin: 0.8em 0 0.2em;
+            font-size: 0.88rem;
+        }
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .swatch {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            display: inline-block;
+        }
+        .swatch.window { background: var(--window); border-color: var(--window-border); }
+        .swatch.dup { background: var(--dup); border-color: var(--bad); }
+        .swatch.left { box-shadow: inset 0 0 0 2px var(--left-color); }
+        .swatch.right { box-shadow: inset 0 0 0 2px var(--right-color); }
+
+        .flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin: 1em 0;
+        }
+        .flow .box {
+            background: var(--accent-soft);
+            border: 1px solid #99c2e8;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            max-width: 200px;
+        }
+        .flow .arrow {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+            .cell { width: 36px; }
+            .cell .ch { height: 36px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Longest Substring Without Duplicate Characters</h1>
+        <p class="meta">
+            Explains <code>com.boot2.LongestSubString</code>
+            (<code>src/main/java/com/boot2/LongestSubString.java</code>)
+            using a sliding-window diagram walkthrough.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#idea">Core idea (sliding window)</a></li>
+            <li><a href="#walk-abc">Walkthrough: <code>"abcabcbb"</code></a></li>
+            <li><a href="#walk-pww">Walkthrough: <code>"pwwkew"</code></a></li>
+            <li><a href="#code">Code mapped to the diagrams</a></li>
+            <li><a href="#complexity">Complexity &amp; pitfalls</a></li>
+        </ul>
+    </nav>
+
+    <section id="problem">
+        <h2>Problem</h2>
+        <div class="question">
+            Given a string <code>s</code>, find the length of the longest substring
+            without duplicate characters.
+        </div>
+        <table>
+            <thead>
+                <tr><th>Input</th><th>Output</th><th>Example substring</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>"abcabcbb"</code></td><td>3</td><td><code>"abc"</code> (also <code>"bca"</code>, <code>"cab"</code>)</td></tr>
+                <tr><td><code>"bbbbb"</code></td><td>1</td><td><code>"b"</code></td></tr>
+                <tr><td><code>"pwwkew"</code></td><td>3</td><td><code>"wke"</code> — not <code>"pwke"</code> (that is a subsequence, not a substring)</td></tr>
+            </tbody>
+        </table>
+        <div class="callout warn">
+            <strong>Substring vs subsequence:</strong> a substring is contiguous.
+            <code>"pwke"</code> skips characters, so it does not count.
+        </div>
+    </section>
+
+    <section id="idea">
+        <h2>Core idea (sliding window)</h2>
+        <p>
+            Maintain a window <code>[left, right]</code> that always contains unique characters.
+            Move <code>right</code> one step at a time. If the new character is already inside
+            the window, jump <code>left</code> just past its previous occurrence.
+        </p>
+
+        <div class="flow" aria-label="Algorithm flow">
+            <div class="box">Expand <code>right</code></div>
+            <div class="arrow">→</div>
+            <div class="box">New char already in window?</div>
+            <div class="arrow">→</div>
+            <div class="box">Yes: <code>left = lastIndex[c] + 1</code></div>
+            <div class="arrow">→</div>
+            <div class="box">Update <code>lastIndex</code> &amp; <code>maxLength</code></div>
+        </div>
+
+        <div class="legend">
+            <span><i class="swatch window"></i> Current window</span>
+            <span><i class="swatch dup"></i> Duplicate that forced a shrink</span>
+            <span><i class="swatch left"></i> <span class="ptr-l">left</span> pointer</span>
+            <span><i class="swatch right"></i> <span class="ptr-r">right</span> pointer</span>
+        </div>
+
+        <div class="callout ok">
+            We store <code>lastIndex</code>: character → last index seen.
+            A duplicate only matters if that index is still <code>≥ left</code>
+            (still inside the window). Older occurrences outside the window are ignored.
+        </div>
+    </section>
+
+    <section id="walk-abc">
+        <h2>Walkthrough: <code>"abcabcbb"</code> → 3</h2>
+
+        <div class="diagram">
+            <p class="diagram-title">Step A — build window <code>"abc"</code> (length 3)</p>
+            <div class="cells">
+                <div class="cell in-window left-ptr"><div class="ch">a</div><div class="idx">0</div></div>
+                <div class="cell in-window"><div class="ch">b</div><div class="idx">1</div></div>
+                <div class="cell in-window right-ptr"><div class="ch">c</div><div class="idx">2</div></div>
+                <div class="cell"><div class="ch">a</div><div class="idx">3</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">c</div><div class="idx">5</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">6</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">7</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell ptr-l">L</div><div class="cell"></div><div class="cell ptr-r">R</div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </div>
+            <p class="diagram-note">
+                <code>lastIndex = {a:0, b:1, c:2}</code>, <code>maxLength = 3</code>
+            </p>
+        </div>
+
+        <div class="diagram">
+            <p class="diagram-title">Step B — <code>right=3</code>, char <code>'a'</code> duplicates index 0 → move <code>left</code> to 1</p>
+            <div class="cells">
+                <div class="cell dup"><div class="ch">a</div><div class="idx">0</div></div>
+                <div class="cell in-window left-ptr"><div class="ch">b</div><div class="idx">1</div></div>
+                <div class="cell in-window"><div class="ch">c</div><div class="idx">2</div></div>
+                <div class="cell in-window right-ptr"><div class="ch">a</div><div class="idx">3</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">c</div><div class="idx">5</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">6</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">7</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell"></div><div class="cell ptr-l">L</div><div class="cell"></div><div class="cell ptr-r">R</div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </div>
+            <p class="diagram-note">
+                Window becomes <code>"bca"</code>, still length 3.
+                <code>left = lastIndex['a'] + 1 = 0 + 1 = 1</code>, then update <code>lastIndex['a'] = 3</code>.
+            </p>
+        </div>
+
+        <div class="diagram">
+            <p class="diagram-title">Step C — later, window never exceeds 3 (e.g. ending at last <code>'b'</code>)</p>
+            <div class="cells">
+                <div class="cell"><div class="ch">a</div><div class="idx">0</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">1</div></div>
+                <div class="cell"><div class="ch">c</div><div class="idx">2</div></div>
+                <div class="cell"><div class="ch">a</div><div class="idx">3</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">c</div><div class="idx">5</div></div>
+                <div class="cell"><div class="ch">b</div><div class="idx">6</div></div>
+                <div class="cell in-window left-ptr right-ptr"><div class="ch">b</div><div class="idx">7</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"><span class="ptr-l">L</span>/<span class="ptr-r">R</span></div>
+            </div>
+            <p class="diagram-note">Answer remains <strong>3</strong>.</p>
+        </div>
+
+        <h3>Step table for <code>"abcabcbb"</code></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>right</th><th>char</th><th>Action</th><th>left</th><th>Window</th><th>max</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>0</td><td>a</td><td>add</td><td>0</td><td>a</td><td>1</td></tr>
+                <tr><td>1</td><td>b</td><td>add</td><td>0</td><td>ab</td><td>2</td></tr>
+                <tr><td>2</td><td>c</td><td>add</td><td>0</td><td>abc</td><td>3</td></tr>
+                <tr><td>3</td><td>a</td><td>dup @0 → left=1</td><td>1</td><td>bca</td><td>3</td></tr>
+                <tr><td>4</td><td>b</td><td>dup @1 → left=2</td><td>2</td><td>cab</td><td>3</td></tr>
+                <tr><td>5</td><td>c</td><td>dup @2 → left=3</td><td>3</td><td>abc</td><td>3</td></tr>
+                <tr><td>6</td><td>b</td><td>dup @4 → left=5</td><td>5</td><td>cb</td><td>3</td></tr>
+                <tr><td>7</td><td>b</td><td>dup @6 → left=7</td><td>7</td><td>b</td><td>3</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="walk-pww">
+        <h2>Walkthrough: <code>"pwwkew"</code> → 3</h2>
+
+        <div class="diagram">
+            <p class="diagram-title">Expand to <code>"pw"</code></p>
+            <div class="cells">
+                <div class="cell in-window left-ptr"><div class="ch">p</div><div class="idx">0</div></div>
+                <div class="cell in-window right-ptr"><div class="ch">w</div><div class="idx">1</div></div>
+                <div class="cell"><div class="ch">w</div><div class="idx">2</div></div>
+                <div class="cell"><div class="ch">k</div><div class="idx">3</div></div>
+                <div class="cell"><div class="ch">e</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">w</div><div class="idx">5</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell ptr-l">L</div><div class="cell ptr-r">R</div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </div>
+            <p class="diagram-note"><code>maxLength = 2</code></p>
+        </div>
+
+        <div class="diagram">
+            <p class="diagram-title">Second <code>'w'</code> (index 2) duplicates index 1 → <code>left = 2</code></p>
+            <div class="cells">
+                <div class="cell"><div class="ch">p</div><div class="idx">0</div></div>
+                <div class="cell dup"><div class="ch">w</div><div class="idx">1</div></div>
+                <div class="cell in-window left-ptr right-ptr"><div class="ch">w</div><div class="idx">2</div></div>
+                <div class="cell"><div class="ch">k</div><div class="idx">3</div></div>
+                <div class="cell"><div class="ch">e</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">w</div><div class="idx">5</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell"></div><div class="cell"></div>
+                <div class="cell"><span class="ptr-l">L</span>/<span class="ptr-r">R</span></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </div>
+            <p class="diagram-note">Window shrinks to a single <code>"w"</code>.</p>
+        </div>
+
+        <div class="diagram">
+            <p class="diagram-title">Grow to <code>"wke"</code> — longest unique substring (length 3)</p>
+            <div class="cells">
+                <div class="cell"><div class="ch">p</div><div class="idx">0</div></div>
+                <div class="cell"><div class="ch">w</div><div class="idx">1</div></div>
+                <div class="cell in-window left-ptr"><div class="ch">w</div><div class="idx">2</div></div>
+                <div class="cell in-window"><div class="ch">k</div><div class="idx">3</div></div>
+                <div class="cell in-window right-ptr"><div class="ch">e</div><div class="idx">4</div></div>
+                <div class="cell"><div class="ch">w</div><div class="idx">5</div></div>
+            </div>
+            <div class="ptr-row">
+                <div class="cell"></div><div class="cell"></div>
+                <div class="cell ptr-l">L</div><div class="cell"></div><div class="cell ptr-r">R</div><div class="cell"></div>
+            </div>
+            <p class="diagram-note"><code>maxLength = 3</code>. Final <code>'w'</code> will shrink the window again, but max stays 3.</p>
+        </div>
+
+        <svg viewBox="0 0 720 160" width="100%" height="160" role="img" aria-label="Timeline of max length for pwwkew">
+            <title>maxLength over right for pwwkew</title>
+            <text x="8" y="24" fill="#555" font-size="14">maxLength over time (s = "pwwkew")</text>
+            <!-- axis -->
+            <line x1="40" y1="120" x2="680" y2="120" stroke="#d0d7de" stroke-width="2"/>
+            <!-- bars -->
+            <rect x="70"  y="90"  width="70" height="30" fill="#cce5ff" stroke="#0066cc"/>
+            <rect x="170" y="60"  width="70" height="60" fill="#cce5ff" stroke="#0066cc"/>
+            <rect x="270" y="90"  width="70" height="30" fill="#cce5ff" stroke="#0066cc"/>
+            <rect x="370" y="60"  width="70" height="60" fill="#cce5ff" stroke="#0066cc"/>
+            <rect x="470" y="30"  width="70" height="90" fill="#1b7a3d" stroke="#146330"/>
+            <rect x="570" y="60"  width="70" height="60" fill="#cce5ff" stroke="#0066cc"/>
+            <text x="95"  y="140" text-anchor="middle" font-size="12" fill="#555">p</text>
+            <text x="195" y="140" text-anchor="middle" font-size="12" fill="#555">w</text>
+            <text x="295" y="140" text-anchor="middle" font-size="12" fill="#555">w</text>
+            <text x="395" y="140" text-anchor="middle" font-size="12" fill="#555">k</text>
+            <text x="495" y="140" text-anchor="middle" font-size="12" fill="#555">e</text>
+            <text x="595" y="140" text-anchor="middle" font-size="12" fill="#555">w</text>
+            <text x="105" y="110" text-anchor="middle" font-size="13" fill="#1a1a1a">1</text>
+            <text x="205" y="95"  text-anchor="middle" font-size="13" fill="#1a1a1a">2</text>
+            <text x="305" y="110" text-anchor="middle" font-size="13" fill="#1a1a1a">1</text>
+            <text x="405" y="95"  text-anchor="middle" font-size="13" fill="#1a1a1a">2</text>
+            <text x="505" y="75"  text-anchor="middle" font-size="13" fill="#fff" font-weight="700">3</text>
+            <text x="605" y="95"  text-anchor="middle" font-size="13" fill="#1a1a1a">2</text>
+        </svg>
+    </section>
+
+    <section id="code">
+        <h2>Code mapped to the diagrams</h2>
+<pre><code>public static int lengthOfLongestSubstring(String s) {
+    if (s == null || s.isEmpty()) {
+        return 0;
+    }
+
+    Map&lt;Character, Integer&gt; lastIndex = new HashMap&lt;&gt;(); // char → last index
+    int maxLength = 0;
+    int left = 0;                                         // window start
+
+    for (int right = 0; right &lt; s.length(); right++) {     // expand window
+        char c = s.charAt(right);
+
+        // Duplicate still inside [left, right]? Jump left past it.
+        if (lastIndex.containsKey(c) &amp;&amp; lastIndex.get(c) &gt;= left) {
+            left = lastIndex.get(c) + 1;
+        }
+
+        lastIndex.put(c, right);                          // record latest index
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+
+    return maxLength;
+}</code></pre>
+
+        <table>
+            <thead>
+                <tr><th>Line / idea</th><th>Diagram meaning</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>right</code> loop</td>
+                    <td>Orange pointer advances one cell at a time</td>
+                </tr>
+                <tr>
+                    <td><code>lastIndex.get(c) &gt;= left</code></td>
+                    <td>Red “duplicate” cell is still inside the blue window</td>
+                </tr>
+                <tr>
+                    <td><code>left = lastIndex.get(c) + 1</code></td>
+                    <td>Green pointer jumps just after that duplicate</td>
+                </tr>
+                <tr>
+                    <td><code>right - left + 1</code></td>
+                    <td>Count of blue cells = current unique substring length</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="complexity">
+        <h2>Complexity &amp; pitfalls</h2>
+        <ul class="tight">
+            <li><strong>Time:</strong> O(n) — each index is visited once by <code>right</code>; <code>left</code> only moves forward.</li>
+            <li><strong>Space:</strong> O(min(n, charset)) for <code>lastIndex</code>.</li>
+            <li><strong>Why not nested substrings?</strong> Checking every <code>i..j</code> is O(n²) or worse; the broken sketch in earlier attempts did that.</li>
+            <li><strong>Must check <code>&gt;= left</code>:</strong> without it, an old index outside the window would incorrectly shrink <code>left</code>.</li>
+        </ul>
+        <div class="callout ok">
+            Interview one-liner: sliding window + last-seen index map;
+            on duplicate inside the window, jump <code>left</code> past it and track max window size.
+        </div>
+    </section>
+
+    <footer>
+        Source: <code>src/main/java/com/boot2/LongestSubString.java</code>.
+        Related: <code>LongestSubstringWithoutRepeating.java</code> (HashSet variant of the same idea).
+        Path: <code>docs/longest-substring-explained.html</code>.
+    </footer>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Generic Java interview questions: ExecutorService, synchronized, CompletableFuture, CloudFormation vs Terraform, garbage collection">
+    <meta name="description" content="Generic Java interview questions: concurrency, CompletableFuture, CloudFormation vs Terraform, GC Java 8 vs 17, Auto Scaling Groups, database indexes">
     <title>Generic Java Interview Questions</title>
     <style>
         :root {
@@ -174,7 +174,8 @@
         <p class="meta">
             General Java concurrency and cloud interview Q&amp;A: ExecutorService pools,
             <code>synchronized</code>, <code>ReentrantLock</code>,
-            <code>CompletableFuture</code>, CloudFormation vs Terraform, and garbage collection.
+            <code>CompletableFuture</code>, CloudFormation vs Terraform, garbage collection,
+            Auto Scaling Groups, database indexes, idempotency, Angular HttpClient patterns, ExecutorService, and Java 17/21 threading.
             Related: <a href="karat-interview-java-questions.html">Karat Interview Java Questions</a>.
         </p>
     </header>
@@ -187,7 +188,13 @@
             <li><a href="#completable-future">3. <code>CompletableFuture</code> and asynchronous processing</a></li>
             <li><a href="#cloudformation-vs-terraform">4. AWS CloudFormation vs Terraform</a></li>
             <li><a href="#garbage-collection">5. Garbage collection — advanced features &amp; interview Q&amp;A</a></li>
-            <li><a href="#summary">6. Quick summary</a></li>
+            <li><a href="#gc-java8-vs-java17">6. GC differences: Java 8 vs Java 17</a></li>
+            <li><a href="#aws-asg">7. How is an Auto Scaling Group configured in AWS?</a></li>
+            <li><a href="#database-indexes">8. Database indexes — benefits and drawbacks</a></li>
+            <li><a href="#idempotency">9. Idempotency — what it is and which CRUD ops support it</a></li>
+            <li><a href="#angular-http">10. Angular — REST timeout &amp; preventing double API submit</a></li>
+            <li><a href="#executor-and-java17-threads">11. ExecutorService summary &amp; modern thread features (Java 17 / 21)</a></li>
+            <li><a href="#summary">12. Quick summary</a></li>
         </ul>
     </nav>
 
@@ -829,8 +836,561 @@ Dashboard result = dashboard
         </div>
     </section>
 
+    <section id="gc-java8-vs-java17">
+        <h2>6. GC differences: Java 8 vs Java 17</h2>
+
+        <div class="question">
+            Question: What changed in garbage collection between Java 8 and Java 17?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            Java 8’s common server default was the <strong>Parallel</strong> collector
+            (throughput-oriented). By Java 9+ <strong>G1</strong> became the default, and Java 17
+            keeps G1 as the mainstream default while offering production-ready
+            <strong>ZGC</strong> / <strong>Shenandoah</strong> for low latency. CMS was deprecated
+            and later removed; GC logging moved to unified <code>-Xlog</code>.
+        </div>
+
+        <h3>Bullet points interviewers expect</h3>
+        <ul class="tight">
+            <li><strong>Default collector:</strong> Java 8 server-class JVMs typically defaulted to
+                Parallel GC; Java 17 defaults to <strong>G1</strong> (G1 became default in JDK 9).</li>
+            <li><strong>CMS:</strong> Concurrent Mark Sweep was still used on many Java 8 apps for
+                lower old-gen pauses; it was deprecated in JDK 9 and <strong>removed in JDK 14</strong>
+                — Java 17 has no CMS; migrate to G1/ZGC/Shenandoah.</li>
+            <li><strong>G1 maturity:</strong> G1 in Java 8 existed but was less often the default;
+                by Java 17 it is the standard balanced collector with better pause targeting and
+                region-based collection.</li>
+            <li><strong>Low-pause collectors:</strong> ZGC and Shenandoah went from experimental /
+                early-access style availability toward <strong>production</strong> options by Java 17
+                (exact “production” status landed across JDK 15–17 timeframe depending on collector).</li>
+            <li><strong>GC logging:</strong> Java 8 often used PrintGC* flags
+                (<code>-XX:+PrintGCDetails</code>, etc.). Java 17 uses <strong>unified JVM logging</strong>
+                (<code>-Xlog:gc*</code>) — old PrintGC flags are obsolete.</li>
+            <li><strong>Ergonomics / containers:</strong> Java 17 (and later 8u updates) better respect
+                container CPU/memory limits; Java 8 era apps often mis-sized heaps inside Docker
+                unless patched/flags were set.</li>
+            <li><strong>Removed / niche:</strong> legacy combinations and some old flags disappear;
+                prefer modern documented options for G1 pause goals and heap sizing.</li>
+            <li><strong>Practical migration tip:</strong> when moving 8 → 17, re-baseline heap size,
+                switch logging to <code>-Xlog:gc*</code>, drop CMS flags, validate pause/throughput
+                with G1 first, then evaluate ZGC if latency SLOs demand it.</li>
+        </ul>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>Java 8 (typical)</th>
+                    <th>Java 17 (typical)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Default (server)</td>
+                    <td>Parallel GC</td>
+                    <td>G1 GC</td>
+                </tr>
+                <tr>
+                    <td>CMS</td>
+                    <td>Common low-pause choice</td>
+                    <td>Gone — use G1 / ZGC / Shenandoah</td>
+                </tr>
+                <tr>
+                    <td>Ultra-low pause</td>
+                    <td>Limited / experimental</td>
+                    <td>ZGC / Shenandoah viable</td>
+                </tr>
+                <tr>
+                    <td>GC logs</td>
+                    <td>PrintGC* style flags</td>
+                    <td><code>-Xlog:gc*</code> unified logging</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Java 8 ≈ Parallel default + CMS era; Java 17 ≈ G1 default, CMS removed, ZGC/Shenandoah
+            for latency, unified GC logging.
+        </div>
+    </section>
+
+    <section id="aws-asg">
+        <h2>7. How is an Auto Scaling Group configured in AWS?</h2>
+
+        <div class="question">
+            Question: How do you configure an Auto Scaling Group (ASG) in AWS?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            An ASG keeps a desired count of EC2 instances healthy across AZs. You configure a
+            <strong>launch template</strong> (AMI, instance type, security groups, userdata),
+            choose subnets/AZs, set min/desired/max capacity, attach scaling policies and health
+            checks (EC2 and/or ELB), and optionally hook it to a load balancer target group.
+        </div>
+
+        <h3>Configuration bullets</h3>
+        <ul class="tight">
+            <li><strong>Launch template / launch configuration:</strong> AMI, instance type,
+                key pair, IAM instance profile, security groups, user data, EBS mapping.
+                Prefer <em>launch templates</em> (launch configs are legacy).</li>
+            <li><strong>VPC &amp; subnets:</strong> place the ASG in multiple AZs for HA
+                (e.g. private app subnets behind an ALB).</li>
+            <li><strong>Capacity:</strong> <code>MinSize</code>, <code>DesiredCapacity</code>,
+                <code>MaxSize</code> — ASG maintains desired; scales between min and max.</li>
+            <li><strong>Health checks:</strong> EC2 status checks and/or ELB/ALB target-group
+                health — unhealthy instances are replaced.</li>
+            <li><strong>Load balancer integration:</strong> register with ALB/NLB target groups
+                so traffic follows healthy instances.</li>
+            <li><strong>Scaling policies:</strong>
+                <ul>
+                    <li>Target tracking (e.g. keep CPU ~50% or ALB requests/target)</li>
+                    <li>Step scaling / simple scaling on CloudWatch alarms</li>
+                    <li>Scheduled scaling (business hours)</li>
+                    <li>Predictive scaling (optional)</li>
+                </ul>
+            </li>
+            <li><strong>Cooldown protection:</strong> instance scale-in protection for long jobs /
+                sticky critical nodes.</li>
+            <li><strong>Lifecycle hooks:</strong> pause terminate/launch to drain connections or
+                bootstrap (e.g. deregister from ALB, flush queues).</li>
+            <li><strong>Mixed instances / Spot:</strong> On-Demand + Spot pools for cost; define
+                instance-type overrides in the launch template / mixed instances policy.</li>
+            <li><strong>IaC:</strong> define ASG in CloudFormation or Terraform
+                (<code>aws_autoscaling_group</code>) with attached policies and alarms.</li>
+            <li><strong>Cool-downs / warmup:</strong> avoid flapping; use warmup so new instances
+                are not counted for metrics until ready.</li>
+        </ul>
+
+        <div class="callout warn">
+            <strong>Interview tip:</strong> ASG scales <em>EC2 capacity</em>. For containers you
+            often use ECS capacity providers / EKS node groups (still ASG underneath for EC2),
+            or serverless (Fargate/Lambda) instead of managing ASG directly.
+        </div>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Launch template + multi-AZ subnets + min/desired/max + health checks + scaling policy
+            (usually target tracking on CPU or ALB request count), optionally behind an ALB.
+        </div>
+    </section>
+
+    <section id="database-indexes">
+        <h2>8. Database indexes — benefits and drawbacks</h2>
+
+        <div class="question">
+            Question: What are the benefits of using indexes, and what are the drawbacks?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            Indexes speed up reads/lookups/joins/sorts by avoiding full table scans, but they
+            cost extra storage and slow writes (INSERT/UPDATE/DELETE must maintain every index).
+            Index selectively on high-selectivity filter/join columns used by real queries.
+        </div>
+
+        <h3>Benefits</h3>
+        <ul class="tight">
+            <li><strong>Faster SELECTs:</strong> locate rows by key without scanning the whole table.</li>
+            <li><strong>Faster JOINs:</strong> nested-loop / merge joins use indexes on join keys.</li>
+            <li><strong>Faster ORDER BY / GROUP BY:</strong> covering or ordered indexes can avoid sorts.</li>
+            <li><strong>Uniqueness enforcement:</strong> UNIQUE / PRIMARY KEY indexes guarantee integrity.</li>
+            <li><strong>Covering indexes:</strong> if all needed columns are in the index, the engine
+                may skip the heap/table lookup (index-only scan).</li>
+            <li><strong>Range queries:</strong> B-tree indexes help <code>BETWEEN</code>,
+                <code>&lt;</code>/<code>&gt;</code>, prefix <code>LIKE 'abc%'</code>.</li>
+        </ul>
+
+        <h3>Drawbacks</h3>
+        <ul class="tight">
+            <li><strong>Write overhead:</strong> every insert/update/delete may update multiple indexes.</li>
+            <li><strong>Storage cost:</strong> indexes consume disk (and buffer pool / cache memory).</li>
+            <li><strong>Slower bulk loads:</strong> loading with many indexes is expensive
+                (sometimes drop/rebuild around ETL).</li>
+            <li><strong>Wrong indexes hurt:</strong> low-selectivity columns (e.g. boolean flags)
+                may not help and can mislead the planner.</li>
+            <li><strong>Maintenance:</strong> fragmentation, bloat (Postgres), statistics must stay fresh.</li>
+            <li><strong>Locking / contention:</strong> hot index pages can become concurrency bottlenecks.</li>
+            <li><strong>Over-indexing:</strong> too many indexes → worse write latency and little read gain.</li>
+        </ul>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Good candidates</th>
+                    <th>Often poor candidates</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PK/FK, join keys, frequent WHERE filters, high cardinality</td>
+                    <td>Rarely filtered columns, very low cardinality alone, wide rarely used composites</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Indexes trade write cost and disk for read speed — index what your queries actually
+            filter/join on; measure with <code>EXPLAIN</code> before adding more.
+        </div>
+    </section>
+
+    <section id="idempotency">
+        <h2>9. Idempotency — what it is and which CRUD ops support it</h2>
+
+        <div class="question">
+            Question: What is idempotency, and which CRUD operations are idempotent?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            An operation is <strong>idempotent</strong> if calling it once or many times with the
+            same request leaves the system in the <em>same final state</em> (side-effect-wise).
+            Retries are safe. In CRUD/HTTP terms: <strong>GET, PUT, and DELETE</strong> are
+            typically idempotent; <strong>POST (Create)</strong> usually is not unless you design
+            it that way (e.g. idempotency keys).
+        </div>
+
+        <h3>What “idempotent” means</h3>
+        <ul class="tight">
+            <li>Repeating the call does not keep applying extra effects
+                (f(x) = f(f(x)) for the resource state).</li>
+            <li>Responses may differ slightly (e.g. DELETE second time → 404), but the
+                <em>resource state</em> stays consistent with a single successful apply.</li>
+            <li>Critical for retries, at-least-once messaging, flaky networks, and payment APIs.</li>
+        </ul>
+
+        <h3>CRUD / HTTP mapping</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>CRUD</th>
+                    <th>Typical HTTP</th>
+                    <th>Idempotent?</th>
+                    <th>Why</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Read</strong></td>
+                    <td><code>GET</code> / <code>HEAD</code></td>
+                    <td><strong>Yes</strong></td>
+                    <td>No state change; reading twice is the same as reading once</td>
+                </tr>
+                <tr>
+                    <td><strong>Update</strong> (replace)</td>
+                    <td><code>PUT</code></td>
+                    <td><strong>Yes</strong> (when it replaces full state)</td>
+                    <td>Sending the same representation again leaves the resource identical</td>
+                </tr>
+                <tr>
+                    <td><strong>Delete</strong></td>
+                    <td><code>DELETE</code></td>
+                    <td><strong>Yes</strong></td>
+                    <td>After first delete, resource is gone; further deletes do not delete “more”</td>
+                </tr>
+                <tr>
+                    <td><strong>Create</strong></td>
+                    <td><code>POST</code></td>
+                    <td><strong>No</strong> (by default)</td>
+                    <td>Each call may create another resource / charge / row</td>
+                </tr>
+                <tr>
+                    <td><strong>Partial update</strong></td>
+                    <td><code>PATCH</code></td>
+                    <td><strong>Often no</strong> (not guaranteed)</td>
+                    <td>Depends on semantics (e.g. “increment counter” is not idempotent;
+                        “set field=X” can be)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Interview bullets</h3>
+        <ul class="tight">
+            <li><strong>Safe vs idempotent:</strong> Safe methods (GET) have no side effects.
+                Idempotent methods may have side effects, but repeats do not change the outcome
+                beyond the first apply (PUT/DELETE).</li>
+            <li><strong>Make POST idempotent:</strong> client sends an
+                <code>Idempotency-Key</code>; server stores key → response and returns the same
+                result on retry instead of creating a duplicate.</li>
+            <li><strong>PUT vs POST:</strong> PUT to a known URI
+                (<code>/orders/123</code>) is naturally idempotent; POST to
+                <code>/orders</code> that auto-generates IDs is not.</li>
+            <li><strong>Messaging:</strong> consumers should be idempotent (dedupe by message id)
+                because brokers often deliver at-least-once.</li>
+            <li><strong>DB angle:</strong> <code>UPDATE ... SET status='PAID' WHERE id=?</code> is
+                idempotent; <code>UPDATE ... SET balance = balance + 10</code> is not.</li>
+        </ul>
+
+        <div class="callout warn">
+            <strong>Nuance:</strong> HTTP specs treat GET/PUT/DELETE as idempotent by contract.
+            Your implementation must honor that — a buggy DELETE that decrements a counter twice
+            is still “wrong,” even if the verb is usually idempotent.
+        </div>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Idempotent = safe to retry. CRUD: Read/Update(replace)/Delete yes;
+            Create (POST) no unless you add idempotency keys or a deterministic resource id.
+        </div>
+    </section>
+
+    <section id="angular-http">
+        <h2>10. Angular — REST timeout &amp; preventing double API submit</h2>
+
+        <div class="question">
+            Question: How do you set a timeout on an Angular REST (<code>HttpClient</code>) call?
+            And which Angular/RxJS feature helps prevent double submission of an API request?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answers:</strong>
+            <ul class="tight" style="margin-bottom:0;">
+                <li><strong>Timeout:</strong> use RxJS <code>timeout({ first: ms })</code> (or legacy
+                    <code>timeout(ms)</code>) on the <code>HttpClient</code> observable
+                    (globally via an interceptor if needed).</li>
+                <li><strong>Double submit:</strong> use <code>exhaustMap</code> (ignores new clicks
+                    while the request is in flight) and/or disable the submit button with a
+                    <code>submitting</code> flag. <code>switchMap</code> cancels the previous call
+                    instead of ignoring — different semantics.</li>
+            </ul>
+        </div>
+
+        <h3>REST API timeout in Angular</h3>
+        <ul class="tight">
+            <li><strong>Per-request:</strong> pipe <code>timeout</code> after <code>http.get/post</code>.</li>
+            <li><strong>Global:</strong> HTTP interceptor that applies <code>timeout</code> to every
+                outgoing request (optional per-URL overrides).</li>
+            <li><strong>On timeout:</strong> observable errors with <code>TimeoutError</code>;
+                handle in <code>catchError</code> / UI toast.</li>
+            <li><strong>Related:</strong> backend/gateway timeouts still matter; client timeout
+                only aborts the browser wait / unsubscribes the request.</li>
+        </ul>
+
+<pre><code>import { timeout, catchError } from 'rxjs/operators';
+import { TimeoutError, throwError } from 'rxjs';
+
+this.http.post('/api/orders', body).pipe(
+  timeout({ first: 10_000 }), // fail if no response in 10s
+  catchError(err =&gt; {
+    if (err instanceof TimeoutError) {
+      return throwError(() =&gt; new Error('Request timed out'));
+    }
+    return throwError(() =&gt; err);
+  })
+).subscribe(...);
+</code></pre>
+
+        <h3>Preventing double submission of an API request</h3>
+        <ul class="tight">
+            <li><strong><code>exhaustMap</code> (best RxJS answer):</strong> while an inner HTTP
+                call is active, new trigger emissions (button clicks) are <em>ignored</em>.
+                Ideal for “Submit” to avoid duplicate POSTs.</li>
+            <li><strong>UI disable flag:</strong> set <code>submitting = true</code> on click;
+                bind <code>[disabled]="submitting"</code>; clear in <code>finalize()</code>.
+                Simple and interview-friendly.</li>
+            <li><strong><code>switchMap</code>:</strong> cancels the previous in-flight request when
+                a new one starts — good for search-as-you-type, <em>not</em> always right for
+                create/submit (may cancel a valid POST).</li>
+            <li><strong><code>concatMap</code>:</strong> queues clicks one after another — can still
+                fire multiple POSTs sequentially (usually not what you want for “pay now”).</li>
+            <li><strong><code>debounceTime</code> / <code>throttleTime</code>:</strong> reduces click
+                spam but does not guarantee only one in-flight call by itself.</li>
+            <li><strong>Form state:</strong> reactive forms + disable controls while pending;
+                template <code>ngForm</code> submitted state alone is not enough for async APIs.</li>
+            <li><strong>Server-side:</strong> still use idempotency keys for POST — UI guards can fail
+                (double tab, retries).</li>
+        </ul>
+
+<pre><code>// exhaustMap: ignore extra clicks until the HTTP call completes
+submit$ = this.submitClick$.pipe(
+  exhaustMap(() =&gt; this.http.post('/api/orders', this.form.value).pipe(
+    finalize(() =&gt; this.submitting = false)
+  ))
+);
+
+// Button pattern
+onSubmit() {
+  if (this.submitting) return;
+  this.submitting = true;
+  this.http.post('/api/orders', this.form.value)
+    .pipe(finalize(() =&gt; this.submitting = false))
+    .subscribe(...);
+}
+</code></pre>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operator / approach</th>
+                    <th>Double-submit effect</th>
+                    <th>Typical use</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>exhaustMap</code></td>
+                    <td>Ignores new triggers while in flight</td>
+                    <td>Form submit / “Buy” button</td>
+                </tr>
+                <tr>
+                    <td><code>switchMap</code></td>
+                    <td>Cancels previous request</td>
+                    <td>Typeahead search</td>
+                </tr>
+                <tr>
+                    <td><code>concatMap</code></td>
+                    <td>Runs all, one after another</td>
+                    <td>Ordered sequential jobs</td>
+                </tr>
+                <tr>
+                    <td><code>[disabled]</code> + flag</td>
+                    <td>Blocks UI re-entry</td>
+                    <td>Simple templates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            Timeout with RxJS <code>timeout</code> on <code>HttpClient</code>; prevent double POST with
+            <code>exhaustMap</code> and/or disable the button while <code>submitting</code> is true.
+        </div>
+    </section>
+
+    <section id="executor-and-java17-threads">
+        <h2>11. ExecutorService summary &amp; modern thread features (Java 17 / 21)</h2>
+
+        <div class="question">
+            Question: Give a brief summary of <code>ExecutorService</code>, and what is new for
+            threading around Java 17 (and the follow-on LTS Java 21)?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            <code>ExecutorService</code> is the standard API to run tasks on a managed thread pool
+            instead of creating raw <code>Thread</code>s. Java 17 (LTS) still uses platform threads
+            with the classic executors. <strong>Virtual threads</strong> (Project Loom) became a
+            standard feature in <strong>Java 21</strong> — often discussed together with “modern Java /
+            Java 17+” interviews, but they are not part of JDK 17 itself.
+        </div>
+
+        <h3>ExecutorService — brief summary</h3>
+        <ul class="tight">
+            <li><strong>What it is:</strong> an interface that accepts tasks (<code>Runnable</code> /
+                <code>Callable</code>) and runs them asynchronously on pooled threads.</li>
+            <li><strong>Why use it:</strong> reuse threads, bound concurrency, get
+                <code>Future</code>/<code>CompletableFuture</code> results, orderly shutdown.</li>
+            <li><strong>Common factories:</strong>
+                <code>newFixedThreadPool(n)</code>,
+                <code>newCachedThreadPool()</code>,
+                <code>newSingleThreadExecutor()</code>,
+                <code>newScheduledThreadPool(n)</code>,
+                or a custom <code>ThreadPoolExecutor</code>.</li>
+            <li><strong>Submit vs execute:</strong> <code>execute</code> = fire-and-forget;
+                <code>submit</code> returns a <code>Future</code>.</li>
+            <li><strong>Lifecycle:</strong> <code>shutdown()</code> (orderly) vs
+                <code>shutdownNow()</code> (interrupt / drain); await termination with
+                <code>awaitTermination</code>.</li>
+            <li><strong>Best practice:</strong> prefer a bounded <code>ThreadPoolExecutor</code>
+                (max threads + bounded queue + rejection policy) in production — see
+                <a href="#thread-pool-limits">§1</a>.</li>
+        </ul>
+
+<pre><code>ExecutorService pool = Executors.newFixedThreadPool(4);
+Future&lt;Integer&gt; f = pool.submit(() -&gt; compute());
+Integer result = f.get();
+pool.shutdown();
+</code></pre>
+
+        <h3>Threading around Java 17 (what is / isn’t new)</h3>
+        <ul class="tight">
+            <li><strong>Java 17 LTS:</strong> still <strong>platform threads</strong> (1 OS thread ≈
+                1 Java thread). No virtual threads in 17.</li>
+            <li><strong>Same core model:</strong> <code>Thread</code>, <code>ExecutorService</code>,
+                <code>ForkJoinPool</code>, <code>CompletableFuture</code> remain the daily toolkit.</li>
+            <li><strong>Deprecations to know:</strong> legacy security-manager direction and some
+                older APIs evolve across 17→21; prefer modern concurrency utilities over
+                <code>Thread.stop</code>-era patterns (long obsolete).</li>
+            <li><strong>Interview trap:</strong> do not claim “Java 17 introduced virtual threads.”
+                Say: <em>Java 17 is the LTS baseline; virtual threads arrived in Java 21.</em></li>
+        </ul>
+
+        <h3>New / major thread features after Java 17 (Java 21 — mention in “modern Java” answers)</h3>
+        <ul class="tight">
+            <li><strong>Virtual threads (JEP 444, Java 21):</strong> lightweight threads managed by
+                the JVM; millions can exist because they unmount from OS carriers when blocking
+                on I/O. Ideal for high-concurrency servers (many blocking JDBC/HTTP calls).</li>
+            <li><strong>Create them:</strong>
+                <code>Thread.ofVirtual().start(runnable)</code> or
+                <code>Executors.newVirtualThreadPerTaskExecutor()</code>.</li>
+            <li><strong>With ExecutorService:</strong> virtual-thread-per-task executor still
+                implements <code>ExecutorService</code> — same submit API, different thread type.</li>
+            <li><strong>Structured concurrency (preview in 21):</strong>
+                <code>StructuredTaskScope</code> treats related tasks as a unit (cancel together,
+                clearer failure handling) — contrast with ad-hoc <code>CompletableFuture.allOf</code>.</li>
+            <li><strong>When virtual threads help:</strong> lots of blocking I/O, simple thread-per-request
+                style. <strong>When they don’t magically help:</strong> heavy CPU-bound work
+                (still limited by cores); avoid pinning (long <code>synchronized</code> / native
+                frames) where possible.</li>
+            <li><strong>Migration note:</strong> many apps on Java 17 stay on platform-thread pools;
+                upgrading to 21 lets you adopt virtual threads without rewriting business logic if
+                code already uses executors / blocking APIs cleanly.</li>
+        </ul>
+
+<pre><code>// Java 21 — virtual thread per task
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    Future&lt;String&gt; f = executor.submit(() -&gt; httpClient.get(url));
+    System.out.println(f.get());
+}
+</code></pre>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>Java 17</th>
+                    <th>Java 21+</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Default thread model</td>
+                    <td>Platform threads + classic pools</td>
+                    <td>Same + optional virtual threads</td>
+                </tr>
+                <tr>
+                    <td><code>ExecutorService</code></td>
+                    <td>Primary abstraction</td>
+                    <td>Still primary; VT-per-task executor added</td>
+                </tr>
+                <tr>
+                    <td>Virtual threads</td>
+                    <td>Not available</td>
+                    <td>Standard feature</td>
+                </tr>
+                <tr>
+                    <td>Structured concurrency</td>
+                    <td>Not available</td>
+                    <td>Preview APIs (<code>StructuredTaskScope</code>)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Interview one-liner:</strong>
+            <code>ExecutorService</code> = managed thread pool for tasks.
+            Java 17 = platform threads + classic executors;
+            Java 21 = add virtual threads for massive blocking concurrency with the same mental model.
+        </div>
+    </section>
+
     <section id="summary">
-        <h2>6. Quick summary</h2>
+        <h2>12. Quick summary</h2>
         <table>
             <thead>
                 <tr>
@@ -866,6 +1426,38 @@ Dashboard result = dashboard
                 <tr>
                     <td>Garbage collection</td>
                     <td>G1 default for many servers; ZGC for ultra-low pause; fix leaks/churn before exotic flags</td>
+                </tr>
+                <tr>
+                    <td>Java 8 vs 17 GC</td>
+                    <td>Parallel/CMS era → G1 default; CMS gone; ZGC/Shenandoah + unified logging</td>
+                </tr>
+                <tr>
+                    <td>AWS Auto Scaling Group</td>
+                    <td>Launch template + min/desired/max + multi-AZ + health checks + scaling policy</td>
+                </tr>
+                <tr>
+                    <td>Database indexes</td>
+                    <td>Faster reads/joins; extra storage + slower writes — index selectively</td>
+                </tr>
+                <tr>
+                    <td>Idempotency</td>
+                    <td>Safe to retry; GET/PUT/DELETE yes; POST create usually no (unless idempotency key)</td>
+                </tr>
+                <tr>
+                    <td>Angular HTTP timeout</td>
+                    <td>RxJS <code>timeout</code> on HttpClient (or interceptor)</td>
+                </tr>
+                <tr>
+                    <td>Angular double submit</td>
+                    <td><code>exhaustMap</code> + disable button while submitting</td>
+                </tr>
+                <tr>
+                    <td>ExecutorService</td>
+                    <td>Managed pool for tasks; shutdown cleanly; prefer bounded pools in prod</td>
+                </tr>
+                <tr>
+                    <td>Java 17 vs 21 threads</td>
+                    <td>17 = platform threads; 21 = virtual threads + structured concurrency preview</td>
                 </tr>
             </tbody>
         </table>

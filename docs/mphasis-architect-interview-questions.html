@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mphasis Architect interview Q&amp;A from WhatsApp screenshots: deadlocks, concurrency, memory, Spring Cloud security, Hibernate, streaming, multi-cloud IoT, K8s blue-green, GitLab CI, PCI DSS/GDPR">
+    <title>Mphasis Architect Interview Questions</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.4em;
+        }
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.8em;
+        }
+        a { color: var(--accent); }
+        .meta { color: var(--muted); font-size: 0.95rem; margin: 0.5em 0 1.5em; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+        .callout.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+        .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+        .callout.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 0.8em;
+            font-weight: 600;
+        }
+        .qa {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 1.8em;
+            background: #fafbfc;
+        }
+        .tag {
+            display: inline-block;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 0.1em 0.65em;
+            font-size: 0.8rem;
+            margin-right: 0.35em;
+        }
+        .src { color: var(--muted); font-size: 0.85rem; margin-top: 0.4em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: #f3f6fa; font-weight: 600; }
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { border: 0; padding: 0; background: transparent; }
+        ul.tight li { margin: 0.35em 0; }
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mphasis Architect Interview Questions</h1>
+        <p class="meta">
+            Parsed from screenshots in
+            <code>WhatsApp Unknown_mphasis_architect_interview</code>
+            (11 images → 10 distinct questions + Spring <code>@Transactional</code> note).
+            Style matches
+            <a href="generic-java-interview-questions.html">generic-java-interview-questions.html</a>
+            /
+            <a href="whatsapp-interview-questions.html">whatsapp-interview-questions.html</a>.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#concurrency">Concurrency &amp; JVM</a></li>
+            <li><a href="#security">Security &amp; transactions</a>
+                <ul>
+                    <li><a href="#q-zero-trust">Zero-trust APIs (interview Q)</a></li>
+                    <li><a href="#jwt-authz-plain">JWT scopes &amp; AuthZ in plain English</a></li>
+                    <li><a href="#q-hibernate-tx">Hibernate transactions</a></li>
+                </ul>
+            </li>
+            <li><a href="#distributed">Distributed systems &amp; cloud</a></li>
+            <li><a href="#devops">Kubernetes &amp; CI/CD</a>
+                <ul>
+                    <li><a href="#q-blue-green">Blue-green (interview Q)</a></li>
+                    <li><a href="#blue-green-plain">Blue vs green in plain English</a></li>
+                    <li><a href="#canary-plain">Canary deployments</a></li>
+                    <li><a href="#q-gitlab-ci">GitLab CI artifacts</a></li>
+                    <li><a href="#s3-large-upload">Large S3 uploads without data loss</a></li>
+                </ul>
+            </li>
+            <li><a href="#compliance">Compliance</a></li>
+            <li><a href="#summary">Quick answer key</a></li>
+        </ul>
+    </nav>
+
+    <div class="callout">
+        <strong>Interview context:</strong> Live architect screen-share chat (sender <code>RG22</code>).
+        Answers below are concise talking points suitable for verbal delivery.
+    </div>
+
+    <!-- ===================== CONCURRENCY ===================== -->
+    <section id="concurrency">
+        <h2>Concurrency &amp; JVM</h2>
+
+        <div class="qa" id="q-deadlock">
+            <div class="question">Given a multi-threaded Java application that occasionally exhibits deadlocks under heavy load, describe your systematic approach to identify, analyze, and resolve the deadlock, and how you would prevent similar issues in future development.</div>
+            <span class="tag">Java</span><span class="tag">Deadlock</span><span class="tag">Concurrency</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Detect:</strong> Reproduce under load; capture thread dump (<code>jstack</code>, <code>jcmd Thread.print</code>, VisualVM) when hung; look for “Found one Java-level deadlock”.</li>
+                    <li><strong>Analyze:</strong> Map lock order from stacks (who holds A waiting for B). Confirm circular wait vs long GC / pool starvation.</li>
+                    <li><strong>Resolve:</strong> Enforce global lock ordering; shrink critical sections; prefer <code>tryLock(timeout)</code> / interruptible locks; redesign to single lock or lock-free structures where safe.</li>
+                    <li><strong>Prevent:</strong> Static analysis / reviews for nested locks; avoid lock-in-callback; use higher-level concurrency (<code>ConcurrentHashMap</code>, actors/queues); chaos tests that assert no deadlock under load.</li>
+                </ul>
+            </div>
+            <p class="src">Source: WhatsApp Image 2026-08-13 at 12.43.21 PM.jpeg</p>
+        </div>
+
+        <div class="qa" id="q-sync-collections">
+            <div class="question">You need to integrate a legacy Java module that uses synchronized collections with a new high-concurrency service. What issues might arise, and how would you design a solution that balances thread safety with maximum performance?</div>
+            <span class="tag">Concurrency</span><span class="tag">Collections</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Issues:</strong> Coarse <code>Collections.synchronized*</code> locks serialize throughput; compound operations (check-then-act) are not atomic; mixing with concurrent collections can hide races; legacy APIs may hold locks while calling out.</li>
+                    <li><strong>Design:</strong> Isolate legacy behind a façade; copy-on-boundary or queue async writes into the legacy module so hot path stays on <code>ConcurrentHashMap</code> / lock-free structures.</li>
+                    <li><strong>Balance:</strong> Keep synchronized collections only where mutation volume is low; for hot paths migrate to concurrent collections + explicit atomic APIs; use read replicas / immutable snapshots for readers.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.21 PM (1).jpeg</p>
+        </div>
+
+        <div class="qa" id="q-memory-bloat">
+            <div class="question">A cloud-based analytics platform is experiencing memory bloat and slower batch job completion times. How would you identify the memory issues, and what strategies would you use to optimize memory usage and batch job performance?</div>
+            <span class="tag">JVM</span><span class="tag">Memory</span><span class="tag">Batch</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Identify:</strong> Heap dumps + histogram (<code>jmap</code>, Eclipse MAT, async-profiler); GC logs (<code>-Xlog:gc*</code>); container RSS vs heap; look for retained caches, large lists, classloader leaks.</li>
+                    <li><strong>Memory:</strong> Stream/chunk instead of loading full datasets; bound caches (Caffeine/size+TTL); off-heap/columnar formats; fix leaks (thread locals, static maps).</li>
+                    <li><strong>Batch speed:</strong> Right-size parallelism vs GC; partition work; push filters early; tune GC (G1/ZGC) and container limits; avoid thrashing from oversubscription.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM.jpeg / (1).jpeg</p>
+        </div>
+    </section>
+
+    <!-- ===================== SECURITY ===================== -->
+    <section id="security">
+        <h2>Security &amp; transactions</h2>
+
+        <div class="qa" id="q-zero-trust">
+            <div class="question">You need to ensure secure API-to-API communication between Spring Boot microservices using Spring Cloud in a zero-trust environment. How would you architect authentication and authorization, and what Spring Cloud features would you leverage?</div>
+            <span class="tag">Spring Cloud</span><span class="tag">Zero Trust</span><span class="tag">Security</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>AuthN:</strong> mTLS between services (service mesh or Spring Cloud Gateway + certs) plus short-lived OAuth2/JWT (client credentials) from IdP (Keycloak/Cognito/Entra).</li>
+                    <li><strong>AuthZ:</strong> Scopes/roles in JWT; fine-grained checks via Spring Security method security; optionally OPA/policy sidecar. Never trust network location alone.
+                        (<a href="#jwt-authz-plain">plain-English detail</a>)</li>
+                    <li><strong>Spring Cloud:</strong> Gateway as policy enforcement point; Spring Cloud LoadBalancer; config via Config Server/Bus for rotating keys; Resilience4j circuit breakers; optional Spring Authorization Server for internal tokens.</li>
+                    <li><strong>Zero-trust extras:</strong> Deny by default, least privilege, continuous verification, audit logs, secrets in vault—not in images.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (2).jpeg</p>
+        </div>
+
+        <div class="qa" id="jwt-authz-plain">
+            <h3 style="margin-top:0;">JWT, scopes, and AuthZ in plain English</h3>
+
+            <h3>AuthN vs AuthZ (do not mix them up)</h3>
+            <table>
+                <thead>
+                    <tr><th></th><th>Plain English</th><th>Example question</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>AuthN</strong> (authentication)</td>
+                        <td>“Who are you?” — prove identity.</td>
+                        <td>Is this really service <code>order-api</code> / user Alice?</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AuthZ</strong> (authorization)</td>
+                        <td>“What are you allowed to do?” — enforce permissions.</td>
+                        <td>May this caller create an order? Refund? Read PII?</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>
+                A JWT is mainly an <strong>AuthN badge</strong> (signed proof of who issued the token and for whom),
+                that also carries <strong>AuthZ claims</strong> (scopes/roles) so each service can decide allow/deny
+                without calling the IdP on every request.
+            </p>
+
+            <h3>What a JWT is (simple picture)</h3>
+<pre><code>header.payload.signature
+
+payload (claims) might include:
+  sub   = who (user id or client/service id)
+  iss   = who issued it (Keycloak / Cognito / Entra)
+  aud   = who it is meant for (your API audience)
+  exp   = when it expires (keep short-lived)
+  scope = space-separated permissions  e.g. "orders.read orders.write"
+  roles = coarse job titles             e.g. ["ROLE_ADMIN","ROLE_USER"]
+</code></pre>
+            <ul class="tight">
+                <li>The <strong>signature</strong> proves the IdP issued it and nobody tampered with the payload.</li>
+                <li>Services trust the JWT only after verifying signature + <code>iss</code> / <code>aud</code> / <code>exp</code> (and often <code>nbf</code>).</li>
+                <li><strong>Never trust</strong> “they’re on our VPC / cluster network” alone — that is the opposite of zero-trust.</li>
+            </ul>
+
+            <h3>Scopes vs roles (the “rules” people put in JWTs)</h3>
+            <table>
+                <thead>
+                    <tr><th></th><th>Scope</th><th>Role</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Meaning</td>
+                        <td>A <em>specific permission</em> to call an API capability.</td>
+                        <td>A <em>job / group label</em> that usually implies a bundle of permissions.</td>
+                    </tr>
+                    <tr>
+                        <td>Typical shape</td>
+                        <td><code>orders.read</code>, <code>payments.refund</code>, <code>inventory.write</code></td>
+                        <td><code>ROLE_CUSTOMER</code>, <code>ROLE_SUPPORT</code>, <code>ROLE_ADMIN</code></td>
+                    </tr>
+                    <tr>
+                        <td>Good for</td>
+                        <td>Service-to-service / OAuth2 APIs (least privilege per client).</td>
+                        <td>Human users and coarse UI/API gates (“admins can do X”).</td>
+                    </tr>
+                    <tr>
+                        <td>Rule of thumb</td>
+                        <td>Ask: “Does this token grant this <em>action</em>?”</td>
+                        <td>Ask: “Is this principal in this <em>group</em>?”</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="callout">
+                <strong>Least privilege:</strong> give a client only the scopes it needs
+                (e.g. inventory service gets <code>inventory.write</code>, not <code>payments.refund</code>).
+                Roles are broader — still map them to concrete checks in code/policy, don’t treat “ADMIN” as magic.
+            </div>
+
+            <h3>How AuthZ is enforced in practice</h3>
+            <ol>
+                <li>
+                    <strong>Gateway / resource-server filter (coarse).</strong>
+                    Spring Cloud Gateway or each Spring Boot resource server validates the JWT,
+                    then requires a scope/role for a route
+                    (e.g. <code>POST /orders</code> needs <code>SCOPE_orders.write</code>).
+                </li>
+                <li>
+                    <strong>Method security (fine-grained).</strong>
+                    Inside the service:
+                    <code>@PreAuthorize("hasAuthority('SCOPE_orders.write')")</code>
+                    or <code>hasRole('ADMIN')</code>, or SpEL that also checks “user may only see <em>their</em> order.”
+                    This is where “rules” meet business data.
+                </li>
+                <li>
+                    <strong>Optional OPA / policy sidecar.</strong>
+                    Instead of hard-coding every rule in Java, send
+                    “who + action + resource attributes” to Open Policy Agent (or similar).
+                    Policy as code (Rego) answers allow/deny — useful when rules change often or are shared across languages.
+                </li>
+            </ol>
+<pre><code>Caller  →  mTLS (channel trust) + JWT (identity + scopes)
+        →  Gateway checks JWT + route scopes
+        →  OrderService @PreAuthorize / OPA
+        →  allow or 401/403
+</code></pre>
+
+            <h3>Example “rules” you would actually state in an interview</h3>
+            <ul class="tight">
+                <li>Reject expired or wrong-<code>aud</code> tokens.</li>
+                <li><code>orders.write</code> required to create an order; <code>orders.read</code> to fetch.</li>
+                <li>Service account for <code>payment-service</code> may call <code>payments.charge</code>, not <code>users.admin</code>.</li>
+                <li>User role <code>CUSTOMER</code> may read only orders where <code>order.customerId == jwt.sub</code>.</li>
+                <li>No JWT / invalid JWT → <strong>401</strong>; valid JWT but missing scope/role → <strong>403</strong>.</li>
+                <li>Deny by default: anything not explicitly allowed is forbidden.</li>
+            </ul>
+
+            <div class="callout ok">
+                <strong>One-liner:</strong>
+                AuthN = prove identity (mTLS + short-lived JWT).
+                AuthZ = enforce scopes/roles (and resource rules) at the gateway and in the method —
+                never “they’re on our network, so they’re allowed.”
+            </div>
+        </div>
+
+        <div class="qa" id="q-hibernate-tx">
+            <div class="question">Describe how Hibernate manages database transactions. What potential issues can arise if transaction boundaries are not correctly defined in a multi-threaded web application, and how would you mitigate those issues?</div>
+            <span class="tag">Hibernate</span><span class="tag">Transactions</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>How:</strong> Session bound to a transaction (Spring <code>@Transactional</code> / JTA). Unit of work flushes/commits at boundary; LazyLoading works only while session is open.</li>
+                    <li><strong>Issues:</strong> Long transactions hold DB locks; session-per-thread misuse across threads; LazyInitializationException; dirty reads/lost updates; connecting multiple threads to one Session (not thread-safe).</li>
+                    <li><strong>Mitigate:</strong> Short service-layer transactions; one Session per request/thread; open-session-in-view only if deliberate; optimistic locking (<code>@Version</code>); never share Session across threads; clear tx boundaries for read vs write.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (3).jpeg</p>
+        </div>
+
+        <div class="qa" id="q-transactional-note">
+            <div class="question">Note seen in chat input / message: <code>@Transactional(Rollback=true)</code> — is this valid?</div>
+            <span class="tag">Spring</span><span class="tag">@Transactional</span>
+            <div class="callout warn">
+                <strong>Answer (brief):</strong> Invalid / misleading. Correct attributes are e.g.
+                <code>@Transactional(rollbackFor = Exception.class)</code> or
+                <code>@Transactional(noRollbackFor = …)</code>.
+                Default already rolls back on unchecked exceptions; there is no <code>Rollback=true</code> attribute.
+            </div>
+            <p class="src">Appears repeatedly in chat input across screenshots; also as a RG22 message in …(5).jpeg</p>
+        </div>
+    </section>
+
+    <!-- ===================== DISTRIBUTED ===================== -->
+    <section id="distributed">
+        <h2>Distributed systems &amp; cloud</h2>
+
+        <div class="qa" id="q-realtime-analytics">
+            <div class="question">Design a distributed system for real-time analytics on high-velocity data streams (e.g., IoT sensor data) that must remain available despite node failures. What key architectural choices would you make and why?</div>
+            <span class="tag">Streaming</span><span class="tag">HA</span><span class="tag">Architecture</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Ingest:</strong> Durable, partitioned log (Kafka / Kinesis / Pub/Sub) with replication factor ≥ 3.</li>
+                    <li><strong>Process:</strong> Stateless stream processors (Flink / Spark Structured Streaming / Kafka Streams) with checkpointing and exactly-once or at-least-once + idempotent sinks.</li>
+                    <li><strong>Storage:</strong> Hot path: time-series / OLAP (ClickHouse, Druid, Timestream); cold: object storage.</li>
+                    <li><strong>Availability:</strong> Multi-AZ; consumer group rebalance; no single coordinator SPOF; circuit breakers and backpressure.</li>
+                    <li><strong>Why:</strong> Decouple producers from consumers; scale partitions horizontally; survive broker/node loss without data loss.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (4).jpeg</p>
+        </div>
+
+        <div class="qa" id="q-multicloud-iot">
+            <div class="question">A client requires a cost-efficient, scalable analytics pipeline that ingests, processes, and visualizes real-time IoT data. How would you design this solution using services from AWS, Azure, and GCP, and what trade-offs would you consider?</div>
+            <span class="tag">AWS</span><span class="tag">Azure</span><span class="tag">GCP</span><span class="tag">IoT</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <table>
+                    <thead>
+                        <tr><th>Stage</th><th>AWS</th><th>Azure</th><th>GCP</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ingest</td>
+                            <td>IoT Core → Kinesis / MSK</td>
+                            <td>IoT Hub → Event Hubs</td>
+                            <td>IoT Core → Pub/Sub</td>
+                        </tr>
+                        <tr>
+                            <td>Process</td>
+                            <td>Flink / Lambda / Glue</td>
+                            <td>Stream Analytics / Functions</td>
+                            <td>Dataflow</td>
+                        </tr>
+                        <tr>
+                            <td>Store / viz</td>
+                            <td>S3 + Timestream / QuickSight</td>
+                            <td>ADLS + Synapse / Power BI</td>
+                            <td>BigQuery + Looker</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <ul class="tight">
+                    <li><strong>Prefer single-cloud</strong> for one pipeline (ops simplicity, egress cost, IAM coherence).</li>
+                    <li><strong>Multi-cloud trade-offs:</strong> portability vs higher latency/cost, duplicated skills, harder SLAs; use only if regulatory / lock-in avoidance requires it (e.g., abstract ingest → Kafka-compatible → portable Flink).</li>
+                    <li><strong>Cost:</strong> serverless for spiky load; reserved capacity for steady streams; tier cold data to object storage.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (5).jpeg</p>
+        </div>
+    </section>
+
+    <!-- ===================== DEVOPS ===================== -->
+    <section id="devops">
+        <h2>Kubernetes &amp; CI/CD</h2>
+
+        <div class="qa" id="q-blue-green">
+            <div class="question">During a blue-green deployment in Kubernetes, how would you ensure zero downtime and safe rollback if issues are detected post-switch? Describe the necessary steps and configurations.</div>
+            <span class="tag">Kubernetes</span><span class="tag">Blue-Green</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li>Run <strong>green</strong> Deployment alongside blue; both healthy via readiness/liveness probes.</li>
+                    <li>Smoke-test green (Job, synthetic checks) before sending real users.</li>
+                    <li><strong>Cutover:</strong> Point Service selector / Ingress backend to green labels only when green is Ready.</li>
+                    <li><strong>Zero downtime:</strong> Keep blue pods until green is verified; connection draining / <code>preStop</code> hooks; session affinity awareness.</li>
+                    <li><strong>Rollback:</strong> Flip selector back to blue instantly; retain blue image/replicas until soak period ends; automate with Argo Rollouts / Flagger if preferred.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (6).jpeg</p>
+        </div>
+
+        <div class="qa" id="blue-green-plain">
+            <h3 style="margin-top:0;">Blue vs green in plain English</h3>
+            <p>
+                Think of two complete copies of your app sitting in the cluster at once.
+                Only one copy is “live” (getting user traffic). The colors are just nicknames:
+            </p>
+            <table>
+                <thead>
+                    <tr><th>Color</th><th>Plain English</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Blue</strong></td>
+                        <td>The <em>current live</em> version users already use (old/stable).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Green</strong></td>
+                        <td>The <em>new version</em> you just deployed and are warming up (not live yet, or about to become live).</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="callout">
+                After a successful switch, people often rename mentally: yesterday’s green
+                becomes today’s blue (the new “current live”), and the next release starts
+                as a fresh green again. The names are roles, not permanent labels on servers.
+            </div>
+
+            <h3>How traffic moves (the “switch”)</h3>
+            <ol>
+                <li><strong>Before:</strong> Users hit a stable entry point (Service / Ingress / load balancer). That entry point sends <em>all</em> traffic to <strong>blue</strong> pods.</li>
+                <li><strong>Deploy green:</strong> Start a second set of pods with the new image. Users still only see blue. Green is idle from a user perspective.</li>
+                <li><strong>Health-check green:</strong> Wait until green pods pass readiness (and your smoke tests). Blue still serves everyone.</li>
+                <li><strong>Flip:</strong> Change the Service (or Ingress) so it now points at <strong>green</strong> instead of blue. New requests go to green. That flip is the cutover.</li>
+                <li><strong>Keep blue warm:</strong> Do not delete blue yet. If green misbehaves, flip the Service back to blue = instant rollback.</li>
+                <li><strong>Later:</strong> After a soak period, tear down blue to save cost.</li>
+            </ol>
+<pre><code>Users / browser
+       │
+       ▼
+  Ingress / Load balancer   (stable hostname: api.example.com)
+       │
+       ▼
+  Service  (selector = which pods get traffic)
+       │
+       ├──► BLUE pods  (v1, live)     ◄── traffic BEFORE switch
+       └──► GREEN pods (v2, standby)  ◄── traffic AFTER switch
+</code></pre>
+            <p>
+                <strong>Zero downtime</strong> means: green is fully ready <em>before</em> you flip;
+                blue stays up during the flip; in-flight requests on blue can finish
+                (graceful shutdown / <code>preStop</code> / connection draining).
+            </p>
+
+            <h3>What you actually use in Kubernetes (not a special “blue-green console”)</h3>
+            <p>
+                There is no separate product called “Blue-Green Console.” You do this with
+                normal Kubernetes objects and the usual tools:
+            </p>
+            <table>
+                <thead>
+                    <tr><th>Piece</th><th>Role in blue-green</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Deployment</strong> (×2)</td>
+                        <td>One Deployment (or ReplicaSet) for blue pods, one for green pods — different labels/images.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Service</strong></td>
+                        <td>Stable ClusterIP / name. You change its <code>selector</code> labels from <code>version=blue</code> to <code>version=green</code> to flip traffic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ingress</strong> (optional)</td>
+                        <td>External HTTP entry. Can point at one Service, or at two Services if you stage traffic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Probes</strong></td>
+                        <td><code>readinessProbe</code> / <code>livenessProbe</code> so green only receives traffic when healthy.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>kubectl</strong> / CI</td>
+                        <td>CLI (or GitLab/Jenkins/Argo job) applies YAML: create green, wait ready, patch Service selector, optionally delete blue.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Optional UI</strong></td>
+                        <td>Kubernetes Dashboard, Lens, OpenShift Console, cloud consoles (EKS/AKS/GKE) — only viewers; the switch is still Deployment + Service.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Optional controllers</strong></td>
+                        <td>Argo Rollouts / Flagger / Spinnaker can automate the flip and metrics checks for you.</td>
+                    </tr>
+                </tbody>
+            </table>
+<pre><code># Example idea (labels):
+# Blue Deployment:  app=shop, color=blue,  version=v1
+# Green Deployment: app=shop, color=green, version=v2
+#
+# Live Service initially:
+#   selector: { app: shop, color: blue }
+#
+# Cutover (kubectl / CI):
+#   kubectl patch svc shop -p '{"spec":{"selector":{"app":"shop","color":"green"}}}'
+#
+# Rollback:
+#   patch selector back to color=blue
+</code></pre>
+            <div class="callout warn">
+                <strong>Interview tip:</strong> Say clearly that blue-green is a <em>traffic-routing pattern</em>
+                on top of Kubernetes Deployments + Service (and maybe Ingress). You are not
+                replacing Kubernetes with a different platform — you are using two pod sets
+                and flipping which set the Service selects.
+            </div>
+        </div>
+
+        <div class="qa" id="canary-plain">
+            <h3 style="margin-top:0;">What is a canary deployment? (plain English)</h3>
+            <p>
+                A <strong>canary</strong> is like sending a small flock of birds into the mine first.
+                You release the new version to a <em>small percentage</em> of users (or one pod / one region),
+                watch errors and latency, then gradually increase traffic — or abort and send everyone
+                back to the old version.
+            </p>
+            <table>
+                <thead>
+                    <tr><th></th><th>Blue-green</th><th>Canary</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>How traffic moves</td>
+                        <td><strong>All-or-nothing flip</strong> (100% blue → 100% green)</td>
+                        <td><strong>Gradual</strong> (e.g. 5% → 25% → 50% → 100% new)</td>
+                    </tr>
+                    <tr>
+                        <td>Risk</td>
+                        <td>Lower if you tested green well; but one bad flip hits everyone at once</td>
+                        <td>Limits blast radius — only a slice of users sees the new build first</td>
+                    </tr>
+                    <tr>
+                        <td>Rollback</td>
+                        <td>Flip Service back to blue</td>
+                        <td>Drop canary weight to 0% / scale canary pods to 0</td>
+                    </tr>
+                    <tr>
+                        <td>Typical K8s tooling</td>
+                        <td>Two Deployments + one Service selector flip</td>
+                        <td>Two Deployments + weighted Ingress / Service mesh (Istio, Linkerd) / Flagger / Argo Rollouts</td>
+                    </tr>
+                    <tr>
+                        <td>When to use</td>
+                        <td>Simple cutover, clear “go live” moment, easy mental model</td>
+                        <td>High traffic / high risk changes where you want live production proof first</td>
+                    </tr>
+                </tbody>
+            </table>
+<pre><code>Canary sketch:
+
+  Users ──► Ingress / mesh
+               ├── 95% ──► stable pods (v1)
+               └──  5% ──► canary pods (v2)   ← watch metrics
+                            then raise % if healthy
+</code></pre>
+            <ul class="tight">
+                <li><strong>Canary ≠ blue-green:</strong> canary shares traffic; blue-green usually keeps idle standby then flips fully.</li>
+                <li><strong>Rolling update</strong> (default <code>kubectl set image</code> / Deployment strategy): Kubernetes replaces pods gradually <em>inside one Deployment</em>. Related idea, but not the same as a named canary with explicit % routing and analysis.</li>
+                <li><strong>Smoke test:</strong> you hit green/canary yourself before users; canary lets <em>real</em> users hit a small slice.</li>
+            </ul>
+            <div class="callout ok">
+                <strong>One-liner for interviews:</strong>
+                Blue-green = two full environments, switch 100% when ready.
+                Canary = drip the new version to a few users first, then widen if metrics look good.
+            </div>
+        </div>
+
+        <div class="qa" id="q-gitlab-ci">
+            <div class="question">A team reports that their GitLab CI pipeline frequently stalls during artifact upload to a remote server. How would you diagnose and resolve this issue while ensuring minimal disruption to the deployment process?</div>
+            <span class="tag">GitLab CI</span><span class="tag">Artifacts</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Diagnose:</strong> Job logs + runner metrics; network path to artifact store (S3/MinIO/GitLab object storage); DNS/TLS timeouts; artifact size; concurrent upload limits; disk I/O on runner.</li>
+                    <li><strong>Resolve:</strong> Compress/exclude large paths; use cache vs artifacts appropriately;
+                        <a href="#s3-large-upload">multipart uploads to S3</a> / increase timeouts; dedicated high-bandwidth runners;
+                        store large binaries in object storage and pass URLs, not full zip through GitLab artifacts.</li>
+                    <li><strong>Minimal disruption:</strong> Fix on a canary runner first; add retry with backoff on upload job; keep deploy jobs gated on successful upload checksum, not wall-clock hope.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (7).jpeg</p>
+        </div>
+
+        <div class="qa" id="s3-large-upload">
+            <h3 style="margin-top:0;">Large file upload to S3 is failing — how to optimize without losing data</h3>
+            <p class="meta" style="margin-top:0;">
+                Common follow-up when CI artifacts (or any big binary) upload to S3/MinIO stalls or fails mid-transfer.
+            </p>
+
+            <div class="callout warn">
+                <strong>Do not</strong> keep retrying one giant single-PUT of a multi‑GB file.
+                A network blip forces you to restart from byte 0, wastes time, and raises the chance
+                you accept a truncated object if you are not careful about integrity checks.
+            </div>
+
+            <h3>Plain English: what goes wrong</h3>
+            <ul class="tight">
+                <li>One HTTP request carrying the whole file times out or drops → upload fails.</li>
+                <li>If a client “succeeds” without verifying size/checksum, you can store a <em>corrupt or partial</em> object.</li>
+                <li>CI then deploys or consumes that object → data loss / broken releases.</li>
+            </ul>
+
+            <h3>Optimize the upload (keep every byte)</h3>
+            <ol>
+                <li>
+                    <strong>Multipart upload (main fix).</strong>
+                    Split the file into parts (e.g. 8–100 MB each). Upload parts in parallel.
+                    S3 only assembles the final object after <em>all</em> parts succeed
+                    (<code>CreateMultipartUpload</code> → <code>UploadPart</code> × N → <code>CompleteMultipartUpload</code>).
+                    Failed parts retry individually — you do not re-send the whole file.
+                </li>
+                <li>
+                    <strong>SDK / CLI that already does this.</strong>
+                    Prefer AWS CLI <code>aws s3 cp</code> / <code>sync</code> (multipart by default for large files),
+                    Transfer Manager in the AWS SDK, or <code>aws s3api</code> multipart calls —
+                    rather than a raw single <code>PutObject</code> in your own script.
+                </li>
+                <li>
+                    <strong>Retry only failed parts</strong> with exponential backoff + jitter.
+                    Keep the multipart upload ID; resume instead of aborting unless you are giving up.
+                </li>
+                <li>
+                    <strong>Tune part size and concurrency</strong> for the network:
+                    fewer huge parts on flaky links; more parallel parts on fat pipes —
+                    without flooding the runner’s NIC or hitting S3 request rate limits.
+                </li>
+                <li>
+                    <strong>Timeouts &amp; idle limits:</strong> raise client read/write timeouts for large parts;
+                    avoid load balancers that cut long idle connections mid-upload.
+                </li>
+                <li>
+                    <strong>Optional: compress before upload</strong> (gzip/zstd) if the content compresses well —
+                    smaller transfer, same data after download+decompress. Do not compress already-compressed formats (zip, jpg, mp4) expecting big wins.
+                </li>
+                <li>
+                    <strong>Transfer Acceleration / closer region / VPC endpoint</strong> when latency or public-internet path is the bottleneck.
+                </li>
+            </ol>
+
+            <h3>Guarantee you did not lose or corrupt data</h3>
+            <table>
+                <thead>
+                    <tr><th>Check</th><th>Why it matters</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Checksums</strong> (CRC32C / SHA-256 / MD5 where appropriate)</td>
+                        <td>Client and S3 agree each part (and the whole object) matches what you sent. AWS SDKs can enforce flexible checksums on upload.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compare sizes</strong></td>
+                        <td>Local file size == <code>ContentLength</code> / <code>head-object</code> size after upload.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ETag awareness</strong></td>
+                        <td>For multipart objects, ETag is not a simple MD5 of the whole file — use explicit checksums or download+hash for final proof.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Complete only when all parts OK</strong></td>
+                        <td>Never treat “some parts uploaded” as success. Incomplete multipart uploads are not the final object (and should be aborted/lifecycle-cleaned).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Idempotent key / versioning</strong></td>
+                        <td>Upload to a temp key (or new version), verify, then copy/rename to the final key so consumers never see a half-written object.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gate the next CI step</strong></td>
+                        <td>Deploy/download only after verify job passes (checksum + head-object).</td>
+                    </tr>
+                </tbody>
+            </table>
+
+<pre><code># Sketch: large file with AWS CLI (multipart under the hood)
+aws s3 cp huge-artifact.zip s3://my-bucket/artifacts/huge-artifact.zip \
+  --expected-size $(stat -c%s huge-artifact.zip)   # where supported
+# Then verify:
+aws s3api head-object --bucket my-bucket --key artifacts/huge-artifact.zip
+# Compare ContentLength to local size; optionally download to a scratch path and sha256sum
+</code></pre>
+
+            <div class="callout ok">
+                <strong>Interview one-liner:</strong>
+                Use <em>multipart upload</em> so failures retry by part, then <em>verify checksum/size</em>
+                (and only then publish the final key) so a flaky network never leaves you with a truncated file.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== COMPLIANCE ===================== -->
+    <section id="compliance">
+        <h2>Compliance</h2>
+
+        <div class="qa" id="q-pci-gdpr">
+            <div class="question">A fintech company must comply with both PCI DSS and GDPR. Describe your approach to ensuring ongoing compliance with both standards, identifying areas where requirements might conflict or overlap, and how you would resolve these issues in practice.</div>
+            <span class="tag">PCI DSS</span><span class="tag">GDPR</span><span class="tag">Fintech</span>
+            <div class="callout ok">
+                <strong>Answer (brief):</strong>
+                <ul class="tight">
+                    <li><strong>Approach:</strong> Shared control framework (policies, encryption, access control, logging, IR); continuous evidence (config-as-code, SIEM, quarterly ASV / DPIA cadence); tokenize card data; minimize PII.</li>
+                    <li><strong>Overlap:</strong> Encryption, least privilege, audit trails, secure SDLC, incident response — implement once, map to both frameworks.</li>
+                    <li><strong>Tension:</strong> PCI wants retained logs/evidence; GDPR wants data minimization &amp; erasure. Resolve by: short PII retention with justified legal basis; tokenize PAN outside GDPR subject-access where possible; erase personal data while retaining non-personal security logs; separate cardholder environment (CDE) from general CRM.</li>
+                    <li><strong>Practice:</strong> Privacy-by-design reviews, DPO + security liaison, vendor DPAs, regular gap assessments.</li>
+                </ul>
+            </div>
+            <p class="src">Source: …12.43.22 PM (8).jpeg</p>
+        </div>
+    </section>
+
+    <!-- ===================== SUMMARY ===================== -->
+    <section id="summary">
+        <h2>Quick answer key</h2>
+        <table>
+            <thead>
+                <tr><th>#</th><th>Topic</th><th>One-liner</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Deadlocks</td><td>Dump → find circular wait → fix lock order / tryLock → prevent with reviews + tests</td></tr>
+                <tr><td>2</td><td>Sync collections</td><td>Coarse locks hurt; façade + concurrent collections on hot path</td></tr>
+                <tr><td>3</td><td>Memory / batch</td><td>Heap dump + GC logs; stream/chunk; bound caches; tune GC &amp; parallelism</td></tr>
+                <tr><td>4</td><td>Zero-trust APIs</td><td>mTLS + short-lived JWT; AuthZ via scopes/roles + method security; deny-by-default</td></tr>
+                <tr><td>5</td><td>Hibernate TX</td><td>Session ≠ thread-safe; short tx at service layer; no shared Session</td></tr>
+                <tr><td>—</td><td><code>@Transactional(Rollback=true)</code></td><td>Invalid — use <code>rollbackFor</code></td></tr>
+                <tr><td>6</td><td>Real-time analytics HA</td><td>Replicated log + checkpointed stream jobs + multi-AZ sinks</td></tr>
+                <tr><td>7</td><td>Multi-cloud IoT</td><td>Prefer one cloud; map IoT→stream→warehouse→BI; watch egress/ops cost</td></tr>
+                <tr><td>8</td><td>K8s blue-green</td><td>Blue=live, green=new; deploy both → probe green → flip Service selector; keep blue for rollback. Canary = gradual % traffic instead of full flip</td></tr>
+                <tr><td>9</td><td>GitLab artifact stall</td><td>Network/size/runner I/O; shrink artifacts; retry; canary runner fix</td></tr>
+                <tr><td>—</td><td>Large S3 upload failing</td><td>Multipart + per-part retry; verify checksum/size; publish final key only after OK</td></tr>
+                <tr><td>10</td><td>PCI + GDPR</td><td>Shared controls; tokenize cards; reconcile retention vs erasure</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        Generated from Mphasis architect interview screenshots
+        (<code>E:\Categories\code_backup\WhatsApp Unknown_mphasis_architect_interview</code>).
+        Related:
+        <a href="whatsapp-interview-questions.html">WhatsApp Interview Questions</a> ·
+        <a href="generic-java-interview-questions.html">Generic Java Interview Questions</a>.
+    </footer>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generic Spring Boot Java interview questions: nested @Transactional, JDK vs CGLIB proxies, self-invocation, AOP">
+    <title>Generic Spring Boot Java Questions</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.4em;
+        }
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.8em;
+        }
+        a { color: var(--accent); }
+        .meta { color: var(--muted); font-size: 0.95rem; margin: 0.5em 0 1.5em; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+        .callout.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+        .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+        .callout.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 0.8em;
+            font-weight: 600;
+        }
+        .qa {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 1.8em;
+            background: #fafbfc;
+        }
+        .tag {
+            display: inline-block;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 0.1em 0.65em;
+            font-size: 0.8rem;
+            margin-right: 0.35em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: #f3f6fa; font-weight: 600; }
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { border: 0; padding: 0; background: transparent; }
+        ul.tight li { margin: 0.35em 0; }
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Generic Spring Boot Java Questions</h1>
+        <p class="meta">
+            Spring Boot / Spring transaction interview Q&amp;A.
+            Related:
+            <a href="generic-java-interview-questions.html">Generic Java Interview Questions</a> ·
+            <a href="mphasis-architect-interview-questions.html">Mphasis Architect</a>.
+            Companion code:
+            <code>com.boot2.interview.MutableOrgKeyAndSubsequence</code>,
+            <code>com.boot2.interview.ArraySubsequenceChecker</code>.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#nested-tx">Nested <code>@Transactional</code> — Order / Payment / Inventory</a></li>
+            <li><a href="#proxies">Spring Boot proxies — JDK Dynamic vs CGLIB</a>
+                <ul>
+                    <li><a href="#proxy-triggers">When Spring creates a proxy</a></li>
+                    <li><a href="#proxy-jdk-cglib">JDK vs CGLIB</a></li>
+                    <li><a href="#proxy-lifecycle">Proxy creation lifecycle</a></li>
+                    <li><a href="#proxy-self-invocation">Self-invocation pitfall</a></li>
+                </ul>
+            </li>
+            <li><a href="#summary">Quick answer key</a></li>
+        </ul>
+    </nav>
+
+    <section id="nested-tx">
+        <h2>Nested <code>@Transactional</code> — single or multiple transactions?</h2>
+
+        <div class="qa">
+            <div class="question">
+                Given <code>OrderService.createOrder</code>, <code>PaymentService.processPayment</code>,
+                and <code>InventoryService.updateStock</code> each annotated with
+                <code>@Transactional</code> (no propagation override): is this one transaction
+                or multiple? What happens if payment fails?
+            </div>
+            <span class="tag">Spring Boot</span>
+            <span class="tag">@Transactional</span>
+            <span class="tag">Propagation</span>
+
+            <div class="callout ok">
+                <strong>Verdict: one (single) transaction</strong> — not three separate ones —
+                when all methods use the default propagation
+                <code>Propagation.REQUIRED</code> and calls go through Spring proxies
+                (<code>@Autowired</code> beans, not <code>this.</code>).
+            </div>
+
+            <h3>Why it is a single transaction</h3>
+            <ul class="tight">
+                <li>Default propagation is <code>REQUIRED</code>: join an existing transaction if one is active; otherwise start a new one.</li>
+                <li><code>createOrder</code> starts TX-1, then calls <code>paymentService</code> and <code>inventoryService</code>.</li>
+                <li>Those methods see TX-1 already active → they <strong>join TX-1</strong>. No new physical DB transaction is opened.</li>
+                <li>Seeing <code>@Transactional</code> on three methods does <em>not</em> mean three transactions.</li>
+            </ul>
+
+            <h3>Code under discussion</h3>
+<pre><code>@Service
+public class OrderService {
+    @Autowired private PaymentService paymentService;
+    @Autowired private InventoryService inventoryService;
+
+    @Transactional
+    public void createOrder(OrderRequest request) {
+        Order order = new Order(request);
+        orderRepository.save(order);
+        paymentService.processPayment(order);   // joins same TX
+        inventoryService.updateStock(order);    // joins same TX
+    }
+}
+
+@Service
+public class PaymentService {
+    @Transactional
+    public void processPayment(Order order) {
+        Payment payment = new Payment(order);
+        paymentRepository.save(payment);
+        if (payment.isFailed()) {
+            throw new PaymentException("Payment failed");
+        }
+    }
+}
+
+@Service
+public class InventoryService {
+    @Transactional
+    public void updateStock(Order order) {
+        Inventory inventory = inventoryRepository.findByProduct(order.getProductId());
+        inventory.decrementStock(order.getQuantity());
+        inventoryRepository.save(inventory);
+    }
+}</code></pre>
+
+            <h3>If payment throws</h3>
+            <ul class="tight">
+                <li>Runtime exception (or unchecked) marks the <strong>whole</strong> TX-1 for rollback.</li>
+                <li>Order save and payment save are rolled back together; inventory never runs (or also rolls back if it had).</li>
+                <li>Checked exceptions do <em>not</em> roll back by default unless <code>rollbackFor</code> is set.</li>
+            </ul>
+
+            <h3>When would it be multiple transactions?</h3>
+            <table>
+                <thead>
+                    <tr><th>Change</th><th>Result</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>@Transactional(propagation = REQUIRES_NEW)</code> on payment / inventory</td>
+                        <td>Separate nested transactions (suspend outer, commit/rollback independently)</td>
+                    </tr>
+                    <tr>
+                        <td><code>NOT_SUPPORTED</code> / <code>NEVER</code></td>
+                        <td>Run without / forbid joining the outer TX</td>
+                    </tr>
+                    <tr>
+                        <td>Self-invocation (<code>this.processPayment()</code> inside same class)</td>
+                        <td>Proxy skipped → inner <code>@Transactional</code> ignored
+                            (see <a href="#proxy-self-invocation">self-invocation</a>)</td>
+                    </tr>
+                    <tr>
+                        <td>No outer <code>@Transactional</code></td>
+                        <td>Each public proxied call that hits a transactional method can start its own TX</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout warn">
+                <strong>Interview one-liner:</strong> Three <code>@Transactional</code> methods with
+                default <code>REQUIRED</code> on a call chain = <strong>one shared transaction</strong>.
+                Use <code>REQUIRES_NEW</code> only when you intentionally want an independent commit
+                (e.g. audit log that must survive outer rollback).
+            </div>
+        </div>
+    </section>
+
+    <section id="proxies">
+        <h2>Spring Boot proxies — JDK Dynamic vs CGLIB</h2>
+
+        <div class="qa">
+            <div class="question">
+                How does Spring Boot create proxy objects around beans, when does it do so,
+                and what is the difference between JDK Dynamic Proxies and CGLIB?
+            </div>
+            <span class="tag">Spring Boot</span>
+            <span class="tag">AOP</span>
+            <span class="tag">Proxy</span>
+            <span class="tag">CGLIB</span>
+
+            <p>
+                Spring Boot creates <strong>proxy objects</strong> using either
+                <strong>JDK Dynamic Proxies</strong> or <strong>CGLIB</strong> proxies to wrap a
+                target bean during application startup. The proxy intercepts method calls so
+                Spring can inject cross-cutting behavior (transactions, security, caching, custom
+                aspects) <em>without changing your original source code</em>.
+            </p>
+
+            <h3 id="proxy-triggers">The trigger mechanisms</h3>
+            <p>
+                During ApplicationContext initialization, Spring scans beans for indicators.
+                If a bean matches any of the following, Spring may return a <strong>proxy</strong>
+                instead of the raw instance:
+            </p>
+            <ul class="tight">
+                <li><strong>AOP annotations:</strong> <code>@Aspect</code>, <code>@Around</code>, <code>@Before</code>, …</li>
+                <li><strong>Declarative services:</strong> <code>@Transactional</code>, <code>@Cacheable</code>, <code>@Secured</code>, …</li>
+                <li><strong>Scope mismatches:</strong> injecting a short-lived bean (prototype / request)
+                    into a long-lived singleton via
+                    <code>@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)</code> (or <code>INTERFACES</code>)</li>
+            </ul>
+
+            <h3 id="proxy-jdk-cglib">The two proxying technologies</h3>
+            <p>
+                Spring chooses based on the target class and configuration:
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>JDK Dynamic Proxies</th>
+                        <th>CGLIB Proxies</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Requirements</td>
+                        <td>Target must implement at least one interface</td>
+                        <td>No interface required</td>
+                    </tr>
+                    <tr>
+                        <td>How it works</td>
+                        <td>Generates a runtime class that <em>implements the same interfaces</em></td>
+                        <td>Generates a <em>subclass</em> of the target bean at runtime</td>
+                    </tr>
+                    <tr>
+                        <td>Limitations</td>
+                        <td>Cannot proxy methods that are not on the interface</td>
+                        <td>Cannot proxy <code>final</code> classes or <code>final</code> / <code>private</code> methods</td>
+                    </tr>
+                    <tr>
+                        <td>Spring Boot default</td>
+                        <td>Available if you prefer interface proxies</td>
+                        <td><strong>Default in Spring Boot 2.x / 3.x</strong>, even when interfaces exist</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="callout warn">
+                <strong>Note:</strong> Core Spring Framework historically defaulted to JDK proxies
+                when an interface was present. <strong>Spring Boot overrides that to prefer CGLIB</strong>
+                so injecting the concrete class type does not blow up with a
+                <code>ClassCastException</code> (JDK proxy is only the interface type, not the class).
+            </div>
+
+            <h3 id="proxy-lifecycle">Step-by-step lifecycle of proxy creation</h3>
+            <p>This happens automatically inside the IoC container:</p>
+<pre><code>[Instantiate Raw Bean]
+         │
+         ▼
+[BeanPostProcessor scans bean] ──► Matches @Transactional / @Aspect / … ?
+         │                                       │
+         ▼ (No)                                  ▼ (Yes)
+[Return raw bean]                      [ProxyFactory configured]
+                                                 │
+                                                 ▼
+                                     [Generate runtime class]
+                                      (JDK proxy or CGLIB)
+                                                 │
+                                                 ▼
+                                      [Inject proxy into context]
+</code></pre>
+            <ol>
+                <li><strong>Instantiation:</strong> Spring creates the raw target bean.</li>
+                <li><strong>Post-processing:</strong> a <code>BeanPostProcessor</code>
+                    (e.g. <code>AnnotationAwareAspectJAutoProxyCreator</code>) intercepts it.</li>
+                <li><strong>Evaluation:</strong> processor checks pointcuts / proxy-triggering annotations.</li>
+                <li><strong>Configuration:</strong> on a match, Spring builds a <code>ProxyFactory</code>
+                    and attaches <em>Advice</em> (e.g. transaction interceptor).</li>
+                <li><strong>Generation &amp; injection:</strong> the proxy is registered in the
+                    ApplicationContext <em>instead of</em> the raw bean for injection points.</li>
+            </ol>
+
+            <h3 id="proxy-self-invocation">The self-invocation pitfall</h3>
+            <p>
+                Proxies only intercept <strong>external</strong> calls through the injected bean.
+                A local <code>this.method()</code> call goes straight to the real object and
+                <strong>bypasses</strong> the proxy — so <code>@Transactional</code>,
+                <code>@Cacheable</code>, etc. on that inner method do <em>not</em> run.
+            </p>
+<pre><code>@Service
+public class MyService {
+
+    public void publicMethod() {
+        // Direct internal call — bypasses the proxy.
+        // @Transactional on transactionalMethod WILL NOT APPLY!
+        this.transactionalMethod();
+    }
+
+    @Transactional
+    public void transactionalMethod() {
+        // Database logic
+    }
+}</code></pre>
+            <div class="callout bad">
+                For <code>@Transactional</code> (and similar) to work, the call must come from
+                <strong>outside</strong> the class through a Spring-injected reference so it
+                routes through the proxy first. This is the same reason nested
+                <code>this.processPayment()</code> in one class does not start a separate TX boundary.
+            </div>
+
+            <h3>How to fix self-invocation (quick options)</h3>
+            <ul class="tight">
+                <li><strong>Split the bean:</strong> move <code>transactionalMethod</code> to another
+                    <code>@Service</code> and inject it (cleanest).</li>
+                <li><strong>Self-inject:</strong> <code>@Autowired MyService self;</code> then
+                    <code>self.transactionalMethod()</code> (works with CGLIB; be careful with construction).</li>
+                <li><strong>AopContext:</strong> <code>(MyService) AopContext.currentProxy()</code>
+                    (requires <code>exposeProxy=true</code>; less clean).</li>
+                <li><strong>AspectJ weave mode:</strong> load-time / compile-time weaving can advise
+                    internal calls — heavier setup, rarely needed.</li>
+            </ul>
+
+            <div class="callout ok">
+                <strong>Interview one-liner:</strong> Spring wraps beans in JDK or (by default in Boot)
+                CGLIB proxies via <code>BeanPostProcessor</code> so AOP advice can run.
+                Self-invocation (<code>this.</code>) skips the proxy — call through an injected bean instead.
+            </div>
+        </div>
+    </section>
+
+    <section id="summary">
+        <h2>Quick answer key</h2>
+        <table>
+            <thead>
+                <tr><th>Topic</th><th>One-liner</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Order + Payment + Inventory <code>@Transactional</code></td>
+                    <td><strong>Single</strong> TX (default <code>REQUIRED</code>); payment failure rolls back all</td>
+                </tr>
+                <tr>
+                    <td>Multiple TX?</td>
+                    <td>Only with <code>REQUIRES_NEW</code> (or separate non-joining calls)</td>
+                </tr>
+                <tr>
+                    <td>Why proxies?</td>
+                    <td>Intercept calls for TX / security / cache / AOP without changing your code</td>
+                </tr>
+                <tr>
+                    <td>JDK vs CGLIB</td>
+                    <td>JDK = interface proxy; CGLIB = subclass. <strong>Boot defaults to CGLIB</strong></td>
+                </tr>
+                <tr>
+                    <td>Self-invocation</td>
+                    <td><code>this.txMethod()</code> bypasses proxy → <code>@Transactional</code> ignored</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        Path: <code>docs/generic-spring-boot-java-questions.html</code>.
+        Related coding demos:
+        <code>MutableOrgKeyAndSubsequence.java</code>,
+        <code>ArraySubsequenceChecker.java</code>.
+    </footer>
+</body>
+</html>
