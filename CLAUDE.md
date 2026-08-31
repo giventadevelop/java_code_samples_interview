@@ -38,7 +38,7 @@ The repository contains various standalone Java classes demonstrating:
 **Algorithm Implementations:**
 - `AnagramChecker.java` - String anagram detection using Java 8 streams
 - `BracketMatcher.java`, `ClosingBrackets.java` - Bracket matching algorithms
-- `LongestSubstringWithoutRepeating.java` - String processing algorithms
+- `LongestSubString.java` / `LongestSubStringStringBuilder.java` - longest substring without repeating characters (sliding window / StringBuilder)
 - `PrimeOrNot.java` - Prime number checking
 - `HikingCalculator.java` - Path calculation algorithms
 

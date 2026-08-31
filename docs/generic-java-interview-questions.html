@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Generic Java interview questions: concurrency, CompletableFuture, CloudFormation vs Terraform, GC Java 8 vs 17, Auto Scaling Groups, database indexes">
+    <meta name="description" content="Generic Java interview questions: concurrency, CompletableFuture, API Aggregator scatter-gather, CloudFormation vs Terraform, GC Java 8 vs 17, Auto Scaling Groups, database indexes">
     <title>Generic Java Interview Questions</title>
     <style>
         :root {
@@ -185,7 +185,11 @@
         <ul>
             <li><a href="#thread-pool-limits">1. Thread pools / cached thread pools — infinite tasks or threads?</a></li>
             <li><a href="#synchronized-vs-reentrantlock">2. <code>synchronized</code> vs manual locking with <code>ReentrantLock</code></a></li>
-            <li><a href="#completable-future">3. <code>CompletableFuture</code> and asynchronous processing</a></li>
+            <li><a href="#completable-future">3. <code>CompletableFuture</code> and asynchronous processing</a>
+                <ul>
+                    <li><a href="#api-aggregator">API Aggregator / Scatter-Gather</a></li>
+                </ul>
+            </li>
             <li><a href="#cloudformation-vs-terraform">4. AWS CloudFormation vs Terraform</a></li>
             <li><a href="#garbage-collection">5. Garbage collection — advanced features &amp; interview Q&amp;A</a></li>
             <li><a href="#gc-java8-vs-java17">6. GC differences: Java 8 vs Java 17</a></li>
@@ -579,13 +583,14 @@ CompletableFuture&lt;User&gt; user =
 CompletableFuture&lt;Orders&gt; orders =
         CompletableFuture.supplyAsync(() -&gt; orderClient.list(id), pool);
 
+// thenCombine: “when BOTH are done, merge the two results”
 CompletableFuture&lt;Dashboard&gt; dashboard = user.thenCombine(orders,
         (u, o) -&gt; new Dashboard(u, o));
 
 Dashboard result = dashboard
         .orTimeout(2, TimeUnit.SECONDS)
         .exceptionally(ex -&gt; Dashboard.empty())
-        .join(); // join = unchecked; prefer at the edge, not deep in library code
+        .join(); // join = wait here for the final answer (prefer at the edge)
 </code></pre>
 
         <div class="callout">
@@ -593,6 +598,160 @@ Dashboard result = dashboard
             Use <code>supplyAsync</code> + <code>thenCompose</code>/<code>thenCombine</code>/<code>allOf</code>
             for async pipelines; always name your executor in production and handle failures with
             <code>exceptionally</code>/<code>handle</code>.
+        </div>
+
+        <h3 id="api-aggregator">API Aggregator pattern (Scatter-Gather) with <code>CompletableFuture</code></h3>
+
+        <div class="question">
+            Question: How do you call several microservices in parallel and return one combined
+            response to the client?
+        </div>
+
+        <div class="callout ok">
+            <strong>Short answer:</strong>
+            This is the <strong>API Aggregator</strong> pattern (also called
+            <strong>Scatter-Gather</strong>). One gateway/service receives the client request,
+            <em>scatters</em> parallel calls to downstream services, then <em>gathers</em>
+            the results into a single response.
+        </div>
+
+        <h3>How it works (plain English)</h3>
+        <ol>
+            <li><strong>Client</strong> calls your aggregator once (e.g. “get my dashboard”).</li>
+            <li><strong>Scatter:</strong> aggregator starts several HTTP/RPC calls <em>at the same time</em>
+                (user service, order service, …) — not one after another.</li>
+            <li><strong>Gather:</strong> wait until those calls finish, merge the payloads,
+                return <strong>one</strong> DTO to the client.</li>
+        </ol>
+<pre><code>Client
+   │
+   ▼
+Aggregator ──┬──► Service A
+             ├──► Service B
+             └──► Service C
+   │
+   ▼  (combine A+B+C)
+Combined response
+</code></pre>
+
+        <h3>What the “hard” lines mean (simplified)</h3>
+        <table>
+            <thead>
+                <tr><th>Code</th><th>Plain English</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>supplyAsync(() -&gt; fetchA(), executor)</code></td>
+                    <td>Start fetch A on a <em>background thread</em> from your pool; don’t block the caller yet.</td>
+                </tr>
+                <tr>
+                    <td><code>CompletableFuture.allOf(callA, callB)</code></td>
+                    <td>“Finish only when <strong>every</strong> listed future is done.”
+                        Returns <code>CompletableFuture&lt;Void&gt;</code> — it signals
+                        “all done,” but does <em>not</em> carry A’s or B’s values by itself.</td>
+                </tr>
+                <tr>
+                    <td><code>allCalls.thenCombine(callA, (ignored, dataA) -&gt; …)</code></td>
+                    <td>After allOf completes, also take result of <code>callA</code>.
+                        The first lambda arg is unused (<code>Void</code>). Then you still
+                        read B (e.g. <code>callB.join()</code>) because allOf already finished.</td>
+                </tr>
+                <tr>
+                    <td><code>callB.join()</code></td>
+                    <td>“Give me B’s value now.” Safe here because allOf already waited for B.
+                        Prefer <code>join()</code>/<code>get()</code> only when you know the future is complete,
+                        or at the outer edge of the method.</td>
+                </tr>
+                <tr>
+                    <td>Final <code>.join()</code></td>
+                    <td>Block this thread until the combined response is ready — typical at the
+                        end of a sync service method that must return a value to the caller.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout warn">
+            <strong>Simpler combine for two calls:</strong> you often do <em>not</em> need
+            <code>allOf</code> at all. For exactly two futures, prefer
+            <code>callA.thenCombine(callB, (a, b) -&gt; new CombinedResponse(a, b))</code>.
+            Use <code>allOf</code> when you have <strong>three or more</strong> calls, or when you
+            only need a “everyone finished” signal before reading each future.
+        </div>
+
+<pre><code>import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class DataAggregatorService {
+
+    // Your own pool — do not rely only on ForkJoinPool.commonPool()
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+
+    /** Two-service case — clearest: thenCombine merges both results. */
+    public CombinedResponse aggregateTwo() {
+        CompletableFuture&lt;ServiceAData&gt; callA =
+                CompletableFuture.supplyAsync(this::fetchFromServiceA, executor)
+                        .orTimeout(2, TimeUnit.SECONDS)
+                        .exceptionally(ex -&gt; ServiceAData.empty()); // fallback if A fails
+
+        CompletableFuture&lt;ServiceBData&gt; callB =
+                CompletableFuture.supplyAsync(this::fetchFromServiceB, executor)
+                        .orTimeout(2, TimeUnit.SECONDS)
+                        .exceptionally(ex -&gt; ServiceBData.empty());
+
+        // Wait for A and B, then build one response
+        return callA.thenCombine(callB, CombinedResponse::new).join();
+    }
+
+    /** Three+ services — allOf waits for everyone; then read each result. */
+    public CombinedResponse aggregateMany() {
+        CompletableFuture&lt;ServiceAData&gt; callA =
+                CompletableFuture.supplyAsync(this::fetchFromServiceA, executor);
+        CompletableFuture&lt;ServiceBData&gt; callB =
+                CompletableFuture.supplyAsync(this::fetchFromServiceB, executor);
+        CompletableFuture&lt;ServiceCData&gt; callC =
+                CompletableFuture.supplyAsync(this::fetchFromServiceC, executor);
+
+        // 1) Scatter already started above (all running in parallel)
+        // 2) Gather: allOf = “when A, B, and C are all finished…”
+        return CompletableFuture.allOf(callA, callB, callC)
+                .thenApply(ignored -&gt; {
+                    // Safe: all three completed (or completed exceptionally)
+                    ServiceAData a = callA.join();
+                    ServiceBData b = callB.join();
+                    ServiceCData c = callC.join();
+                    return new CombinedResponse(a, b, c);
+                })
+                .join();
+    }
+
+    private ServiceAData fetchFromServiceA() { return new ServiceAData(); }
+    private ServiceBData fetchFromServiceB() { return new ServiceBData(); }
+    private ServiceCData fetchFromServiceC() { return new ServiceCData(); }
+}
+</code></pre>
+
+        <h3>Best practices</h3>
+        <ul class="tight">
+            <li><strong>Timeouts:</strong> <code>.orTimeout(2, TimeUnit.SECONDS)</code> so one slow
+                downstream does not hang the aggregator forever.</li>
+            <li><strong>Per-call error handling:</strong> <code>.exceptionally(...)</code> or
+                <code>.handle(...)</code> on each future so one failure can return a fallback
+                instead of failing the whole page (unless you want fail-fast).</li>
+            <li><strong>Custom executor:</strong> always pass your own
+                <code>ExecutorService</code>; avoid dumping all HTTP fan-out on
+                <code>ForkJoinPool.commonPool()</code>.</li>
+            <li><strong>Fail strategies:</strong>
+                <em>fail-fast</em> = let the exception propagate if any service must succeed;
+                <em>partial response</em> = empty/default for the failed part, still return 200 with what you have.</li>
+        </ul>
+
+        <div class="callout ok">
+            <strong>Interview one-liner:</strong>
+            Aggregator = scatter parallel <code>supplyAsync</code> calls, gather with
+            <code>thenCombine</code> (2 services) or <code>allOf</code> + <code>thenApply</code> (3+),
+            plus timeouts and per-call fallbacks.
         </div>
     </section>
 
@@ -1418,6 +1577,10 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 <tr>
                     <td><code>CompletableFuture</code></td>
                     <td>Compose async with supplyAsync / thenCompose / allOf; use a named executor</td>
+                </tr>
+                <tr>
+                    <td>API Aggregator / Scatter-Gather</td>
+                    <td>Parallel supplyAsync; thenCombine (2) or allOf+thenApply (3+); timeouts + fallbacks</td>
                 </tr>
                 <tr>
                     <td>CloudFormation vs Terraform</td>

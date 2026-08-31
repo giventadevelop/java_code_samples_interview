@@ -1,5 +1,7 @@
 package com.boot2.coderbyte;
 
+import com.boot2.LongestWord;
+
 /**
  * Runs sample inputs for each Coderbyte Java challenge in this package.
  *
