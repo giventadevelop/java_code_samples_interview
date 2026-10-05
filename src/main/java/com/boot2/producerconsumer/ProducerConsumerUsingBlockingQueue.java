@@ -47,8 +47,6 @@ import java.util.concurrent.BlockingQueue;
  *  poll        | removes                 | returns null
  *  remove()    | removes                 | throws NoSuchElementEx
  * </pre>
- *
- * <p>Related wrapper demo: {@link com.boot2.BlockingQueue}.</p>
  */
 public class ProducerConsumerUsingBlockingQueue {
 

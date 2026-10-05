@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plain-English explanation of FactorialArray: computing the factorial of every number in an array with one precomputed lookup table">
+    <title>FactorialArray — Explained in Plain English</title>
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --muted: #555;
+            --accent: #0066cc;
+            --accent-soft: #e6f2ff;
+            --ok: #1b7a3d;
+            --ok-bg: #e8f7ee;
+            --warn: #b35c00;
+            --warn-bg: #fff5e6;
+            --bad: #b00020;
+            --bad-bg: #fdecea;
+            --code-bg: #f6f8fa;
+            --border: #d0d7de;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--ink);
+            background: #fff;
+        }
+        h1 {
+            font-size: 2.1rem;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.4em;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.45rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 2.4em;
+        }
+        h3 {
+            font-size: 1.15rem;
+            color: #222;
+            margin-top: 1.8em;
+        }
+        a { color: var(--accent); }
+        .meta { color: var(--muted); font-size: 0.95rem; margin: 0.5em 0 1.5em; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 1.5em 0;
+        }
+        .toc ul { margin: 0.4em 0 0 1.1em; padding: 0; }
+        .toc a { text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .callout {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0;
+            border-left: 4px solid var(--accent);
+            background: var(--accent-soft);
+        }
+        .callout.ok { border-left-color: var(--ok); background: var(--ok-bg); }
+        .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+        .callout.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+        .question {
+            background: linear-gradient(135deg, #fff8e6 0%, #fff1cc 100%);
+            border-left: 4px solid var(--warn);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 1.2em 0 0.8em;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0 1.5em;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { background: #f3f6fa; font-weight: 600; }
+        code, pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { border: 0; padding: 0; background: transparent; }
+        ul.tight li { margin: 0.35em 0; }
+
+        /* Lookup-table diagram */
+        .cells {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0.6em 0 0.4em;
+        }
+        .cell {
+            min-width: 64px;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            padding: 6px 4px;
+        }
+        .cell .idx { font-size: 0.75rem; color: var(--muted); }
+        .cell .val {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .cell.hit { background: #cce5ff; border-color: var(--accent); }
+
+        footer {
+            margin-top: 3em;
+            padding-top: 1em;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 640px) {
+            body { padding: 16px 14px 48px; }
+            h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FactorialArray — Explained in Plain English</h1>
+        <p class="meta">
+            Explains <code>com.boot2.FactorialArray</code>
+            (<code>src/main/java/com/boot2/FactorialArray.java</code>).
+            Related:
+            <a href="generic-java-interview-questions.html">Generic Java Interview Questions</a> ·
+            <a href="longest-substring-explained.html">Longest Substring Explained</a>.
+        </p>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+        <strong>Contents</strong>
+        <ul>
+            <li><a href="#problem">The problem</a></li>
+            <li><a href="#big-idea">The big idea: build a lookup table once</a></li>
+            <li><a href="#walkthrough">Step-by-step walkthrough</a></li>
+            <li><a href="#methods">What each method does</a></li>
+            <li><a href="#why-faster">Why it is faster than the original sketch</a></li>
+            <li><a href="#sketch-bugs">Bugs in the original sketch</a></li>
+            <li><a href="#limits">Limits: overflow and negatives</a></li>
+            <li><a href="#summary">Interview summary</a></li>
+        </ul>
+    </nav>
+
+    <section id="problem">
+        <h2>The problem</h2>
+        <div class="question">
+            Given an array of numbers, return a new array where each slot holds the
+            factorial of the matching input number.
+        </div>
+        <p>
+            A <strong>factorial</strong> means “multiply every whole number from 1 up to n.”
+            So <code>3! = 3 × 2 × 1 = 6</code> and <code>5! = 5 × 4 × 3 × 2 × 1 = 120</code>.
+            By definition, <code>0! = 1</code>.
+        </p>
+        <table>
+            <thead>
+                <tr><th>Input</th><th>Output</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>{3, 5}</code></td><td><code>[6, 120]</code></td></tr>
+                <tr><td><code>{5, 3, 5, 0, 4}</code></td><td><code>[120, 6, 120, 1, 24]</code></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="big-idea">
+        <h2>The big idea: build a lookup table once</h2>
+        <p>
+            Factorials build on each other. Once you know <code>4! = 24</code>, getting
+            <code>5!</code> is a single multiplication: <code>24 × 5 = 120</code>. You never
+            need to start again from 1.
+        </p>
+        <p>
+            So instead of computing each answer separately, the class:
+        </p>
+        <ol>
+            <li>Looks for the <strong>biggest</strong> number in the input.</li>
+            <li>Fills a table of factorials from <code>0!</code> up to that biggest number,
+                each one computed from the one before it.</li>
+            <li>Answers every input by simply <strong>reading</strong> its slot in the table.</li>
+        </ol>
+        <div class="callout ok">
+            <strong>Analogy:</strong> instead of walking to the shop separately for every item on
+            your list, you walk once to the farthest aisle you need, filling your basket along the
+            way, and then hand out items from the basket.
+        </div>
+    </section>
+
+    <section id="walkthrough">
+        <h2>Step-by-step walkthrough</h2>
+        <p>Using the input <code>{5, 3, 5, 0, 4}</code>:</p>
+
+        <h3>Step 1 — Find the biggest number</h3>
+        <p>
+            Scan the array once. The largest value is <strong>5</strong>, so the table only needs
+            to go up to <code>5!</code>. While scanning, any negative number stops the method with an
+            error, since negative factorials are not defined.
+        </p>
+
+        <h3>Step 2 — Build the table <code>fact[0..5]</code></h3>
+        <p>
+            Start with <code>fact[0] = 1</code>. Each next slot is the previous slot times its index.
+        </p>
+        <div class="cells" aria-label="Factorial lookup table from 0 to 5">
+            <div class="cell"><div class="idx">fact[0]</div><div class="val">1</div></div>
+            <div class="cell"><div class="idx">fact[1]</div><div class="val">1</div></div>
+            <div class="cell"><div class="idx">fact[2]</div><div class="val">2</div></div>
+            <div class="cell"><div class="idx">fact[3]</div><div class="val">6</div></div>
+            <div class="cell"><div class="idx">fact[4]</div><div class="val">24</div></div>
+            <div class="cell"><div class="idx">fact[5]</div><div class="val">120</div></div>
+        </div>
+<pre><code>fact[1] = fact[0] × 1 = 1
+fact[2] = fact[1] × 2 = 2
+fact[3] = fact[2] × 3 = 6
+fact[4] = fact[3] × 4 = 24
+fact[5] = fact[4] × 5 = 120</code></pre>
+
+        <h3>Step 3 — Answer each input by lookup</h3>
+        <table>
+            <thead>
+                <tr><th>Input value</th><th>Read from</th><th>Answer</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>5</td><td><code>fact[5]</code></td><td>120</td></tr>
+                <tr><td>3</td><td><code>fact[3]</code></td><td>6</td></tr>
+                <tr><td>5</td><td><code>fact[5]</code> (again — no extra work)</td><td>120</td></tr>
+                <tr><td>0</td><td><code>fact[0]</code></td><td>1</td></tr>
+                <tr><td>4</td><td><code>fact[4]</code></td><td>24</td></tr>
+            </tbody>
+        </table>
+        <p>Result: <code>[120, 6, 120, 1, 24]</code>.</p>
+    </section>
+
+    <section id="methods">
+        <h2>What each method does</h2>
+        <table>
+            <thead>
+                <tr><th>Method</th><th>Plain-English role</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>factorial(int[] nums)</code></td>
+                    <td>The fast version. Finds the max, builds the table once, then fills the
+                        result by lookup. Returns an empty array for <code>null</code> or empty input.</td>
+                </tr>
+                <tr>
+                    <td><code>factorialNaive(int[] nums)</code></td>
+                    <td>The slow comparison version. Computes every factorial from scratch,
+                        one input at a time.</td>
+                </tr>
+                <tr>
+                    <td><code>factorialOne(int n)</code></td>
+                    <td>Helper for the naive version: multiplies 2 × 3 × … × n. Starts at 2 because
+                        multiplying by 1 changes nothing.</td>
+                </tr>
+                <tr>
+                    <td><code>main</code></td>
+                    <td>Runs both versions on sample inputs and prints the results so you can see
+                        they agree.</td>
+                </tr>
+                <tr>
+                    <td>Private constructor</td>
+                    <td>Prevents anyone from creating a <code>FactorialArray</code> object. Every
+                        method is static, so the class is just a toolbox.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>The core of the fast method</h3>
+<pre><code>// Build the table once
+long[] fact = new long[max + 1];
+fact[0] = 1L;
+for (int k = 1; k &lt;= max; k++) {
+    fact[k] = fact[k - 1] * k;   // reuse the previous factorial
+}
+
+// Answer every input by lookup
+for (int i = 0; i &lt; nums.length; i++) {
+    result[i] = fact[nums[i]];
+}</code></pre>
+    </section>
+
+    <section id="why-faster">
+        <h2>Why it is faster than the original sketch</h2>
+        <p>
+            The original idea recomputed each factorial from 1 every time. For the input
+            <code>{5, 3, 5, 0, 4}</code> that repeats a lot of the same multiplications:
+        </p>
+        <table>
+            <thead>
+                <tr><th>Approach</th><th>Work done</th><th>Big-O</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Naive (recompute each)</td>
+                    <td>5! from scratch, 3! from scratch, 5! from scratch again, …</td>
+                    <td>About the sum of all input values</td>
+                </tr>
+                <tr>
+                    <td>Lookup table (this class)</td>
+                    <td>Build up to 5! once, then one read per input</td>
+                    <td><code>O(n + max)</code> time, <code>O(max)</code> extra space</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="callout">
+            The gain is biggest when the array is long, values repeat, or values cluster in a
+            small range. For a tiny array like <code>{3, 5}</code> both versions are instant; the
+            difference matters at scale.
+        </div>
+    </section>
+
+    <section id="sketch-bugs">
+        <h2>Bugs in the original sketch</h2>
+        <ul class="tight">
+            <li><code>nums.lenth</code> should be <code>nums.length</code>.</li>
+            <li>The inner loop incremented <code>i++</code> instead of <code>j++</code>, so it
+                never advances correctly.</li>
+            <li>Starting the multiplication at <code>j = 0</code> multiplies the result by zero
+                and wipes it out. Start at 1 or 2.</li>
+            <li><code>factorialInput</code> was declared twice.</li>
+            <li>Missing semicolons, and an unused <code>calculatedList</code> array.</li>
+            <li>Using <code>int</code> for results overflows from <code>13!</code> onward; the class
+                uses <code>long</code> instead.</li>
+        </ul>
+    </section>
+
+    <section id="limits">
+        <h2>Limits: overflow and negatives</h2>
+        <div class="callout warn">
+            <strong>Overflow:</strong> a <code>long</code> holds factorials correctly only up to
+            <code>20!</code>. From <code>21!</code> onward the value silently wraps around to a
+            wrong (even negative) number. The class does not check for this. If inputs can exceed
+            20, either reject them up front or switch the table to <code>BigInteger</code>.
+        </div>
+        <ul class="tight">
+            <li><strong>Negatives:</strong> any negative input throws
+                <code>IllegalArgumentException</code>.</li>
+            <li><strong>Very large max:</strong> the table size equals the biggest input, so a single
+                huge value makes a big table even if every other input is small.</li>
+        </ul>
+    </section>
+
+    <section id="summary">
+        <h2>Interview summary</h2>
+        <div class="callout ok">
+            <strong>One-liner:</strong> find the largest input, build a factorial table once by
+            multiplying each entry by its index, then answer every input with an O(1) lookup —
+            <code>O(n + max)</code> overall instead of recomputing each factorial from scratch.
+            Mention the <code>long</code> overflow limit at <code>20!</code> and
+            <code>BigInteger</code> for anything larger.
+        </div>
+    </section>
+
+    <footer>
+        Source: <code>src/main/java/com/boot2/FactorialArray.java</code>.
+        Run: <code>java -cp target/classes com.boot2.FactorialArray</code>.
+        Path: <code>docs/factorial-array-explained.html</code>.
+    </footer>
+</body>
+</html>

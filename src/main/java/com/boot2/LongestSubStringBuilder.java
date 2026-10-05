@@ -24,7 +24,7 @@ package com.boot2;
  * Example: "pwwkew"   → length 3, "wke"
  * </pre>
  */
-public class LongestSubStringStringBuilder {
+public class LongestSubStringBuilder {
 
     /**
      * Video-style StringBuilder solution: nested loops + indexOf + append + break.
